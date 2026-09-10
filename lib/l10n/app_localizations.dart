@@ -866,6 +866,24 @@ abstract class AppLocalizations {
   /// **'Download and install'**
   String get downloadAndInstall;
 
+  /// No description provided for @updateDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateDialogTitle;
+
+  /// No description provided for @updateDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available. Download and install it now? The app will close and restart automatically.'**
+  String updateDialogBody(String version);
+
+  /// No description provided for @later.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
   /// No description provided for @downloadingUpdate.
   ///
   /// In en, this message translates to:

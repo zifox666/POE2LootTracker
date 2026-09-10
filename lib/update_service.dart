@@ -238,17 +238,7 @@ class UpdateService {
           executableName: executable.uri.pathSegments.last,
         ),
       );
-      await Process.start('powershell.exe', [
-        '-NoLogo',
-        '-NoProfile',
-        '-NonInteractive',
-        '-WindowStyle',
-        'Hidden',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-File',
-        script.path,
-      ], mode: ProcessStartMode.detached);
+      await _launchUpdater(script, work);
     } catch (_) {
       if (await work.exists()) await work.delete(recursive: true);
       rethrow;
@@ -290,6 +280,42 @@ class UpdateService {
   }
 
   void close() => _client.close(force: true);
+
+  Future<void> _launchUpdater(File script, Directory work) async {
+    final commandLine =
+        'powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden '
+        '-ExecutionPolicy Bypass -File "${script.path}"';
+    final escapedCommandLine = commandLine.replaceAll("'", "''");
+    final bootstrap =
+        "\$result = Invoke-CimMethod -ClassName Win32_Process -MethodName Create "
+        "-Arguments @{ CommandLine = '$escapedCommandLine' }; "
+        'if (\$result.ReturnValue -ne 0) { '
+        'throw "Win32_Process.Create failed: \$(\$result.ReturnValue)" }; '
+        '\$result.ProcessId';
+    final result = await Process.run('powershell.exe', [
+      '-NoLogo',
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      bootstrap,
+    ]);
+    final installerPid = int.tryParse(result.stdout.toString().trim());
+    if (result.exitCode != 0 || installerPid == null) {
+      final detail = result.stderr.toString().trim();
+      throw UpdateException(
+        'Unable to start the update installer${detail.isEmpty ? '.' : ': $detail'}',
+      );
+    }
+
+    final marker = File('${work.path}\\installer-started');
+    for (var attempt = 0; attempt < 40 && !await marker.exists(); attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    if (!await marker.exists()) {
+      Process.killPid(installerPid);
+      throw const UpdateException('The update installer did not start.');
+    }
+  }
 }
 
 String _powerShellQuote(String value) => "'${value.replaceAll("'", "''")}'";
@@ -314,6 +340,7 @@ String _renderUpdaterScript({
 \$executableName = $executable
 \$stageDirectory = Join-Path \$workDirectory 'staged'
 \$errorLog = Join-Path \$env:TEMP 'POE2LootTracker-update-error.log'
+Set-Content -LiteralPath (Join-Path \$workDirectory 'installer-started') -Value \$PID
 
 try {
   while (Get-Process -Id \$appProcessId -ErrorAction SilentlyContinue) {
@@ -325,7 +352,29 @@ try {
   }
   Copy-Item -Path (Join-Path \$stageDirectory '*') -Destination \$installDirectory -Recurse -Force
   Start-Process -FilePath (Join-Path \$installDirectory \$executableName) -WorkingDirectory \$installDirectory
-  Remove-Item -LiteralPath \$workDirectory -Recurse -Force -ErrorAction SilentlyContinue
+
+  # The updater cannot recursively delete the directory that contains the running script. Remove
+  # the large cache files now, then let a tiny script outside that directory finish the cleanup
+  # after this process exits.
+  Remove-Item -LiteralPath \$archivePath -Force -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath (Join-Path \$workDirectory 'release.sha256') -Force -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath \$stageDirectory -Recurse -Force -ErrorAction SilentlyContinue
+  \$cleanupScript = Join-Path \$env:TEMP ("POE2LootTracker-cleanup-{0}.ps1" -f \$PID)
+  @'
+\$updaterProcessId = [int]\$env:POE2_LOOT_TRACKER_UPDATER_PID
+\$targetDirectory = \$env:POE2_LOOT_TRACKER_UPDATE_DIR
+while (Get-Process -Id \$updaterProcessId -ErrorAction SilentlyContinue) {
+  Start-Sleep -Milliseconds 100
+}
+Remove-Item -LiteralPath \$targetDirectory -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath \$PSCommandPath -Force -ErrorAction SilentlyContinue
+'@ | Set-Content -LiteralPath \$cleanupScript -Encoding UTF8
+  \$env:POE2_LOOT_TRACKER_UPDATER_PID = [string]\$PID
+  \$env:POE2_LOOT_TRACKER_UPDATE_DIR = \$workDirectory
+  Start-Process -FilePath 'powershell.exe' -WindowStyle Hidden -ArgumentList @(
+    '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+    '-File', ('"{0}"' -f \$cleanupScript)
+  )
 } catch {
   \$_ | Out-String | Set-Content -LiteralPath \$errorLog -Encoding UTF8
   \$installedExecutable = Join-Path \$installDirectory \$executableName

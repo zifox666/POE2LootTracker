@@ -177,6 +177,9 @@ class _DesktopShellState extends State<_DesktopShell> {
   bool runtimeStarted = false;
   bool warningScheduled = false;
   bool resumeAsked = false;
+  bool startupDialogsFinished = false;
+  bool updatePromptScheduled = false;
+  String? promptedUpdateVersion;
 
   @override
   void initState() {
@@ -210,6 +213,7 @@ class _DesktopShellState extends State<_DesktopShell> {
     // Shown on every launch, not just the first: it is a disclaimer, and the only thing the earlier
     // acknowledgement decides is how long it locks its own button.
     _scheduleWarning();
+    if (startupDialogsFinished) _scheduleUpdatePrompt();
     if (runtimeStarted) {
       unawaited(runtime.restoreMainState());
       if (mounted) unawaited(runtime.updateMenu(AppLocalizations.of(context)));
@@ -239,6 +243,41 @@ class _DesktopShellState extends State<_DesktopShell> {
     }
     if (!mounted) return;
     await _maybeAskResume();
+    if (!mounted) return;
+    startupDialogsFinished = true;
+    _scheduleUpdatePrompt();
+  }
+
+  void _scheduleUpdatePrompt() {
+    final release = widget.controller.availableUpdate;
+    if (!startupDialogsFinished ||
+        updatePromptScheduled ||
+        release == null ||
+        widget.controller.updatePhase != UpdatePhase.available ||
+        promptedUpdateVersion == release.version) {
+      return;
+    }
+    updatePromptScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      updatePromptScheduled = false;
+      if (mounted) unawaited(_showUpdatePrompt());
+    });
+  }
+
+  Future<void> _showUpdatePrompt() async {
+    final release = widget.controller.availableUpdate;
+    if (!mounted ||
+        release == null ||
+        widget.controller.updatePhase != UpdatePhase.available ||
+        promptedUpdateVersion == release.version) {
+      return;
+    }
+    promptedUpdateVersion = release.version;
+    final install = await confirmUpdateAvailable(
+      context,
+      version: release.version,
+    );
+    if (install && mounted) await widget.controller.installAvailableUpdate();
   }
 
   /// Asks whether to keep adding to the session the host restored, or start a new one.

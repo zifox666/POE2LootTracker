@@ -20,6 +20,33 @@ Future<void> showUsageWarning(BuildContext context, {required int seconds}) {
   );
 }
 
+/// Offers an update discovered by the automatic startup check.
+Future<bool> confirmUpdateAvailable(
+  BuildContext context, {
+  required String version,
+}) async {
+  final l = AppLocalizations.of(context);
+  return await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: context.colors.card,
+          title: Text(l.updateDialogTitle),
+          content: Text(l.updateDialogBody(version)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l.later),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l.downloadAndInstall),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+}
+
 class _UsageWarningDialog extends StatefulWidget {
   const _UsageWarningDialog({required this.seconds});
 

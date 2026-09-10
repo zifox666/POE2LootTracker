@@ -407,6 +407,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadAndInstall => '下载并安装';
 
   @override
+  String get updateDialogTitle => '发现新版本';
+
+  @override
+  String updateDialogBody(String version) {
+    return '新版本 $version 已可用。现在下载并安装吗？应用会自动关闭并重新启动。';
+  }
+
+  @override
+  String get later => '稍后';
+
+  @override
   String downloadingUpdate(int percent) {
     return '正在下载更新… $percent%';
   }

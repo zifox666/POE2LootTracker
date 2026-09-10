@@ -413,6 +413,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadAndInstall => 'Download and install';
 
   @override
+  String get updateDialogTitle => 'Update available';
+
+  @override
+  String updateDialogBody(String version) {
+    return 'Version $version is available. Download and install it now? The app will close and restart automatically.';
+  }
+
+  @override
+  String get later => 'Later';
+
+  @override
   String downloadingUpdate(int percent) {
     return 'Downloading update... $percent%';
   }

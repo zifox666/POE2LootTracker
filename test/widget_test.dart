@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:poe2_loot_tracker/app_controller.dart';
 import 'package:poe2_loot_tracker/app_theme.dart';
 import 'package:poe2_loot_tracker/app_version.dart';
+import 'package:poe2_loot_tracker/dialogs.dart';
 import 'package:poe2_loot_tracker/l10n/app_localizations.dart';
 import 'package:poe2_loot_tracker/screens/main_shell.dart';
 import 'package:poe2_loot_tracker/screens/settings_tab.dart';
@@ -99,5 +100,41 @@ void main() {
     expect(find.text('当前版本 $appVersionFull'), findsOneWidget);
     expect(find.text('检查更新'), findsWidgets);
     controller.dispose();
+  });
+
+  testWidgets('offers an automatically discovered update on the main UI', (
+    tester,
+  ) async {
+    final theme = buildForuiTheme(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...FLocalizations.localizationsDelegates,
+        ],
+        theme: theme.toApproximateMaterialTheme(),
+        builder: (context, child) => FTheme(
+          data: theme,
+          platform: FPlatformVariant.macOS,
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => confirmUpdateAvailable(context, version: '1.2.0'),
+            child: const Text('show'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('show'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('发现新版本'), findsOneWidget);
+    expect(find.text('新版本 1.2.0 已可用。现在下载并安装吗？应用会自动关闭并重新启动。'), findsOneWidget);
+    expect(find.text('稍后'), findsOneWidget);
+    expect(find.text('下载并安装'), findsOneWidget);
   });
 }
