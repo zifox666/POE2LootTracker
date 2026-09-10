@@ -362,6 +362,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exitApp => 'Exit';
 
   @override
+  String get updates => 'Updates';
+
+  @override
+  String currentVersion(String version) {
+    return 'Current version $version';
+  }
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get checkingForUpdates => 'Checking GitHub for updates...';
+
+  @override
+  String get upToDate => 'You are using the latest release.';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Version $version is available.';
+  }
+
+  @override
+  String get downloadAndInstall => 'Download and install';
+
+  @override
+  String downloadingUpdate(int percent) {
+    return 'Downloading update... $percent%';
+  }
+
+  @override
+  String get installingUpdate =>
+      'Installing update; the app will restart shortly...';
+
+  @override
+  String updateCheckFailed(String message) {
+    return 'Update failed: $message';
+  }
+
+  @override
   String get offsetSettings => 'Memory offsets';
 
   @override

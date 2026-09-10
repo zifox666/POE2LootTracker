@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 
 import '../app_controller.dart';
 import '../app_theme.dart';
+import '../app_version.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/common.dart';
 
@@ -162,6 +163,49 @@ class SettingsTab extends StatelessWidget {
           ),
         ]),
         const SizedBox(height: 16),
+        _group(context, l.updates, [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l.currentVersion(appVersionFull)),
+                    const SizedBox(height: 4),
+                    Text(
+                      _updateStatus(l),
+                      style: TextStyle(
+                        color: controller.updatePhase == UpdatePhase.failed
+                            ? tradingRed
+                            : context.colors.mutedForeground,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              FButton(
+                onPress: _updateBusy
+                    ? null
+                    : controller.updatePhase == UpdatePhase.available
+                    ? controller.installAvailableUpdate
+                    : controller.checkForUpdates,
+                variant: controller.updatePhase == UpdatePhase.available
+                    ? FButtonVariant.primary
+                    : FButtonVariant.outline,
+                mainAxisSize: MainAxisSize.min,
+                child: Text(
+                  controller.updatePhase == UpdatePhase.available
+                      ? l.downloadAndInstall
+                      : l.checkForUpdates,
+                ),
+              ),
+            ],
+          ),
+        ]),
+        const SizedBox(height: 16),
         _OffsetSettings(controller: controller),
       ],
     );
@@ -270,6 +314,25 @@ class SettingsTab extends StatelessWidget {
       ],
     ),
   );
+
+  bool get _updateBusy =>
+      controller.updatePhase == UpdatePhase.checking ||
+      controller.updatePhase == UpdatePhase.downloading ||
+      controller.updatePhase == UpdatePhase.installing;
+
+  String _updateStatus(AppLocalizations l) => switch (controller.updatePhase) {
+    UpdatePhase.idle => l.checkForUpdates,
+    UpdatePhase.checking => l.checkingForUpdates,
+    UpdatePhase.upToDate => l.upToDate,
+    UpdatePhase.available => l.updateAvailable(
+      controller.availableUpdate!.version,
+    ),
+    UpdatePhase.downloading => l.downloadingUpdate(
+      controller.updateDownloadPercent,
+    ),
+    UpdatePhase.installing => l.installingUpdate,
+    UpdatePhase.failed => l.updateCheckFailed(controller.updateError ?? ''),
+  };
 }
 
 class _OffsetSettings extends StatefulWidget {

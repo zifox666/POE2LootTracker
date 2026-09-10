@@ -4,18 +4,21 @@ description: "POE2 desktop loot, map, kill, and market tracker."
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
+# THE SINGLE SOURCE OF TRUTH FOR THE PROJECT VERSION.
+#
+# MAJOR.MINOR.PATCH, optionally followed by +BUILD. Everything else that carries a version is
+# generated from this line by `dart run tool/version.dart`:
+#
+#   * lib/app_version.dart          - compiled into the shell, so the running app knows its own
+#                                     version and can compare itself against the newest release.
+#   * tracker_host/TrackerHost.csproj - the .NET tracking host is a separate assembly.
+#   * the Windows .exe version resource - Flutter passes this line to the runner's CMake itself.
+#
+# Releasing is: bump this line, run the tool, commit, then push a tag matching its semantic half
+# (`1.2.3+45` releases as `v1.2.3`). .github/workflows/release.yml builds the bundle, so do not
+# build and upload one by hand. The build number after `+` is local build identity only; it is not
+# part of the tag, because a tag that moved underneath a published artifact would invalidate the
+# updater's SHA-256 check.
 version: 1.0.0+1
 
 environment:
@@ -30,6 +33,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  crypto: 3.0.7
   flutter_localizations:
     sdk: flutter
   desktop_multi_window: 0.3.1

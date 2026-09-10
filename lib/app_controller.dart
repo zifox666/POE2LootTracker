@@ -1,15 +1,33 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 
+import 'app_version.dart';
 import 'host_client.dart';
 import 'models.dart';
+import 'update_service.dart';
+
+enum UpdatePhase {
+  idle,
+  checking,
+  upToDate,
+  available,
+  downloading,
+  installing,
+  failed,
+}
 
 class AppController extends ChangeNotifier {
-  AppController({HostClient? host, this.startHost = true})
-    : host = host ?? HostClient();
+  AppController({
+    HostClient? host,
+    UpdateService? updateService,
+    this.startHost = true,
+  }) : host = host ?? HostClient(),
+       updateService = updateService ?? UpdateService();
   final HostClient host;
+  final UpdateService updateService;
   final bool startHost;
   StreamSubscription<Map<String, dynamic>>? _events;
 
@@ -27,6 +45,10 @@ class AppController extends ChangeNotifier {
   String? error;
   bool loading = true;
   bool screenCaptureActive = false;
+  UpdatePhase updatePhase = UpdatePhase.idle;
+  UpdateRelease? availableUpdate;
+  String? updateError;
+  int updateDownloadPercent = 0;
   DateTime _lastSnapshotNotify = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// Minimum spacing between rebuilds driven by `trackerSnapshot` pushes from the host.
@@ -95,6 +117,64 @@ class AppController extends ChangeNotifier {
       error = exception.toString();
     } finally {
       loading = false;
+      notifyListeners();
+    }
+    unawaited(checkForUpdates(silent: true));
+  }
+
+  Future<void> checkForUpdates({bool silent = false}) async {
+    if (updatePhase == UpdatePhase.checking ||
+        updatePhase == UpdatePhase.downloading ||
+        updatePhase == UpdatePhase.installing) {
+      return;
+    }
+    updatePhase = UpdatePhase.checking;
+    updateError = null;
+    notifyListeners();
+    try {
+      availableUpdate = await updateService.checkForUpdate(appVersion);
+      updatePhase = availableUpdate == null
+          ? UpdatePhase.upToDate
+          : UpdatePhase.available;
+    } catch (exception) {
+      updateError = exception.toString();
+      updatePhase = silent ? UpdatePhase.idle : UpdatePhase.failed;
+      if (silent) debugPrint('update check failed: $exception');
+    }
+    notifyListeners();
+  }
+
+  Future<void> installAvailableUpdate() async {
+    final release = availableUpdate;
+    if (release == null || updatePhase != UpdatePhase.available) return;
+    updatePhase = UpdatePhase.downloading;
+    updateDownloadPercent = 0;
+    updateError = null;
+    notifyListeners();
+    try {
+      await updateService.downloadAndLaunch(
+        release,
+        onProgress: (received, total) {
+          if (total <= 0) return;
+          final percent = (received * 100 ~/ total).clamp(0, 100);
+          if (percent == updateDownloadPercent) return;
+          updateDownloadPercent = percent;
+          notifyListeners();
+        },
+      );
+      updatePhase = UpdatePhase.installing;
+      notifyListeners();
+      if (startHost) {
+        try {
+          await host.dispose();
+        } catch (exception) {
+          debugPrint('update: closing tracker host failed: $exception');
+        }
+      }
+      exit(0);
+    } catch (exception) {
+      updateError = exception.toString();
+      updatePhase = UpdatePhase.failed;
       notifyListeners();
     }
   }
@@ -363,6 +443,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _events?.cancel();
     if (startHost) unawaited(host.dispose());
+    updateService.close();
     super.dispose();
   }
 }

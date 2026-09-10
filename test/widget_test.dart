@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:poe2_loot_tracker/app_controller.dart';
 import 'package:poe2_loot_tracker/app_theme.dart';
+import 'package:poe2_loot_tracker/app_version.dart';
 import 'package:poe2_loot_tracker/l10n/app_localizations.dart';
 import 'package:poe2_loot_tracker/screens/main_shell.dart';
+import 'package:poe2_loot_tracker/screens/settings_tab.dart';
 
 void main() {
   testWidgets('shows all four localized product tabs', (tester) async {
@@ -57,6 +59,44 @@ void main() {
     await tester.tap(find.text('应用').last);
     await tester.pumpAndSettle();
     expect(find.text('钢铁城塞'), findsOneWidget);
+    controller.dispose();
+  });
+
+  testWidgets('settings show the current version and update control', (
+    tester,
+  ) async {
+    final controller = AppController(startHost: false);
+    final theme = buildForuiTheme(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...FLocalizations.localizationsDelegates,
+        ],
+        theme: theme.toApproximateMaterialTheme(),
+        builder: (context, child) => FTheme(
+          data: theme,
+          platform: FPlatformVariant.macOS,
+          child: child!,
+        ),
+        home: Scaffold(
+          body: SettingsTab(
+            controller: controller,
+            onShowOverlay: () {},
+            onNewSession: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -1000));
+    await tester.pumpAndSettle();
+
+    expect(find.text('软件更新'), findsOneWidget);
+    expect(find.text('当前版本 $appVersionFull'), findsOneWidget);
+    expect(find.text('检查更新'), findsWidgets);
     controller.dispose();
   });
 }

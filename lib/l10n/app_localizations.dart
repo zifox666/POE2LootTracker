@@ -776,6 +776,66 @@ abstract class AppLocalizations {
   /// **'Exit'**
   String get exitApp;
 
+  /// No description provided for @updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updates;
+
+  /// No description provided for @currentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Current version {version}'**
+  String currentVersion(String version);
+
+  /// No description provided for @checkForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// No description provided for @checkingForUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking GitHub for updates...'**
+  String get checkingForUpdates;
+
+  /// No description provided for @upToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You are using the latest release.'**
+  String get upToDate;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available.'**
+  String updateAvailable(String version);
+
+  /// No description provided for @downloadAndInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Download and install'**
+  String get downloadAndInstall;
+
+  /// No description provided for @downloadingUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update... {percent}%'**
+  String downloadingUpdate(int percent);
+
+  /// No description provided for @installingUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing update; the app will restart shortly...'**
+  String get installingUpdate;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed: {message}'**
+  String updateCheckFailed(String message);
+
   /// No description provided for @offsetSettings.
   ///
   /// In en, this message translates to:

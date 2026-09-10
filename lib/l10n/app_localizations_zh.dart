@@ -356,6 +356,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exitApp => '退出';
 
   @override
+  String get updates => '软件更新';
+
+  @override
+  String currentVersion(String version) {
+    return '当前版本 $version';
+  }
+
+  @override
+  String get checkForUpdates => '检查更新';
+
+  @override
+  String get checkingForUpdates => '正在检查 GitHub 更新…';
+
+  @override
+  String get upToDate => '当前已是最新正式版。';
+
+  @override
+  String updateAvailable(String version) {
+    return '发现新版本 $version。';
+  }
+
+  @override
+  String get downloadAndInstall => '下载并安装';
+
+  @override
+  String downloadingUpdate(int percent) {
+    return '正在下载更新… $percent%';
+  }
+
+  @override
+  String get installingUpdate => '正在安装更新，应用即将重启…';
+
+  @override
+  String updateCheckFailed(String message) {
+    return '更新失败：$message';
+  }
+
+  @override
   String get offsetSettings => '内存偏移';
 
   @override

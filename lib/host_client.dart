@@ -10,6 +10,7 @@ class HostClient {
   final _events = StreamController<Map<String, dynamic>>.broadcast();
   final _pending = <String, Completer<dynamic>>{};
   int _nextId = 1;
+  bool _disposed = false;
 
   Stream<Map<String, dynamic>> get events => _events.stream;
 
@@ -102,7 +103,18 @@ class HostClient {
   }
 
   Future<void> dispose() async {
-    await _process?.stdin.close();
+    if (_disposed) return;
+    _disposed = true;
+    final process = _process;
+    if (process != null) {
+      await process.stdin.close();
+      try {
+        await process.exitCode.timeout(const Duration(seconds: 5));
+      } on TimeoutException {
+        process.kill();
+        await process.exitCode;
+      }
+    }
     await _stdoutSubscription?.cancel();
     await _stderrSubscription?.cancel();
     await _events.close();
