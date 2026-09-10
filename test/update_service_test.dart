@@ -2,6 +2,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:poe2_loot_tracker/update_service.dart';
 
 void main() {
+  group('resolveUpdateUrl', () {
+    final github = Uri.parse('https://github.com/owner/repo/releases/file.zip');
+
+    test('supports CDN, native, and custom prefixes', () {
+      expect(
+        resolveUpdateUrl(github, source: 'cdn').toString(),
+        'https://gh-proxy.org/$github',
+      );
+      expect(resolveUpdateUrl(github, source: 'native'), github);
+      expect(
+        resolveUpdateUrl(
+          github,
+          source: 'custom',
+          customCdn: 'https://mirror.example/proxy',
+        ).toString(),
+        'https://mirror.example/proxy/$github',
+      );
+    });
+
+    test('rejects an empty or insecure custom prefix', () {
+      expect(
+        () => resolveUpdateUrl(github, source: 'custom'),
+        throwsA(isA<UpdateException>()),
+      );
+      expect(
+        () => resolveUpdateUrl(
+          github,
+          source: 'custom',
+          customCdn: 'http://mirror.example',
+        ),
+        throwsA(isA<UpdateException>()),
+      );
+    });
+  });
+
   group('SemanticVersion', () {
     test('compares each numeric component', () {
       expect(

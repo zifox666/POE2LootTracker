@@ -95,6 +95,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('软件更新'), findsOneWidget);
+    expect(find.text('CDN（推荐）'), findsOneWidget);
     expect(find.text('当前版本 $appVersionFull'), findsOneWidget);
     expect(find.text('检查更新'), findsWidgets);
     controller.dispose();

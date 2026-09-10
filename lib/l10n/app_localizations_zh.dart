@@ -359,6 +359,32 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updates => '软件更新';
 
   @override
+  String get updateSource => '更新线路';
+
+  @override
+  String get updateSourceCdn => 'CDN（推荐）';
+
+  @override
+  String get updateSourceNative => 'GitHub 原生';
+
+  @override
+  String get updateSourceCustom => '自定义 CDN';
+
+  @override
+  String updateCdnHint(String url) {
+    return '检测和下载均通过 $url';
+  }
+
+  @override
+  String get customUpdateCdn => 'CDN 前缀';
+
+  @override
+  String get customUpdateCdnHint => '例如：https://gh-proxy.org/';
+
+  @override
+  String get save => '保存';
+
+  @override
   String currentVersion(String version) {
     return '当前版本 $version';
   }

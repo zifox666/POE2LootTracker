@@ -49,9 +49,18 @@ public sealed class ProtocolTests
     public void UiOnlySettingsDoNotRequireTheTrackingEngineGate()
     {
         var current = new AppSettings { OverlayMode = "floating", RiskAcknowledged = false };
-        var incoming = new AppSettings { OverlayMode = "minimal", RiskAcknowledged = true };
+        var incoming = new AppSettings
+        {
+            OverlayMode = "minimal",
+            RiskAcknowledged = true,
+            UpdateSource = "custom",
+            CustomUpdateCdn = "https://mirror.example/",
+        };
 
         Assert.False(HostServer.RequiresEngineGate(current, incoming));
+        current.ApplyUiOnly(incoming);
+        Assert.Equal("custom", current.UpdateSource);
+        Assert.Equal("https://mirror.example/", current.CustomUpdateCdn);
 
         incoming.Language = "zh";
         Assert.True(HostServer.RequiresEngineGate(current, incoming));

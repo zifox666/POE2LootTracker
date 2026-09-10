@@ -365,6 +365,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updates => 'Updates';
 
   @override
+  String get updateSource => 'Update source';
+
+  @override
+  String get updateSourceCdn => 'CDN (recommended)';
+
+  @override
+  String get updateSourceNative => 'GitHub direct';
+
+  @override
+  String get updateSourceCustom => 'Custom CDN';
+
+  @override
+  String updateCdnHint(String url) {
+    return 'Checks and downloads through $url';
+  }
+
+  @override
+  String get customUpdateCdn => 'CDN prefix';
+
+  @override
+  String get customUpdateCdnHint => 'For example: https://gh-proxy.org/';
+
+  @override
+  String get save => 'Save';
+
+  @override
   String currentVersion(String version) {
     return 'Current version $version';
   }

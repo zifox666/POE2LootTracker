@@ -782,6 +782,54 @@ abstract class AppLocalizations {
   /// **'Updates'**
   String get updates;
 
+  /// No description provided for @updateSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Update source'**
+  String get updateSource;
+
+  /// No description provided for @updateSourceCdn.
+  ///
+  /// In en, this message translates to:
+  /// **'CDN (recommended)'**
+  String get updateSourceCdn;
+
+  /// No description provided for @updateSourceNative.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub direct'**
+  String get updateSourceNative;
+
+  /// No description provided for @updateSourceCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom CDN'**
+  String get updateSourceCustom;
+
+  /// No description provided for @updateCdnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks and downloads through {url}'**
+  String updateCdnHint(String url);
+
+  /// No description provided for @customUpdateCdn.
+  ///
+  /// In en, this message translates to:
+  /// **'CDN prefix'**
+  String get customUpdateCdn;
+
+  /// No description provided for @customUpdateCdnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: https://gh-proxy.org/'**
+  String get customUpdateCdnHint;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
   /// No description provided for @currentVersion.
   ///
   /// In en, this message translates to:

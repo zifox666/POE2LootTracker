@@ -5,6 +5,30 @@ import 'package:crypto/crypto.dart';
 
 const _latestReleaseUrl =
     'https://api.github.com/repos/zifox666/POE2LootTracker/releases/latest';
+const defaultUpdateCdnPrefix = 'https://gh-proxy.org/';
+
+Uri resolveUpdateUrl(
+  Uri githubUrl, {
+  required String source,
+  String customCdn = '',
+}) {
+  if (source == 'native') return githubUrl;
+  final prefix = switch (source) {
+    'cdn' => defaultUpdateCdnPrefix,
+    'custom' => customCdn.trim(),
+    _ => throw UpdateException('Unsupported update source: $source'),
+  };
+  final prefixUri = Uri.tryParse(prefix);
+  if (prefixUri == null ||
+      prefixUri.scheme != 'https' ||
+      prefixUri.host.isEmpty) {
+    throw const UpdateException(
+      'The custom update CDN must be a valid HTTPS URL.',
+    );
+  }
+  final separator = prefix.endsWith('/') ? '' : '/';
+  return Uri.parse('$prefix$separator$githubUrl');
+}
 
 class UpdateRelease {
   const UpdateRelease({
@@ -124,8 +148,18 @@ class UpdateService {
   final HttpClient _client;
   final Uri _latestReleaseEndpoint;
 
-  Future<UpdateRelease?> checkForUpdate(String currentVersion) async {
-    final response = await _get(_latestReleaseEndpoint);
+  Future<UpdateRelease?> checkForUpdate(
+    String currentVersion, {
+    String source = 'cdn',
+    String customCdn = '',
+  }) async {
+    final response = await _get(
+      resolveUpdateUrl(
+        _latestReleaseEndpoint,
+        source: source,
+        customCdn: customCdn,
+      ),
+    );
     if (response.statusCode == HttpStatus.notFound) {
       await response.drain<void>();
       return null;
@@ -150,6 +184,8 @@ class UpdateService {
 
   Future<void> downloadAndLaunch(
     UpdateRelease release, {
+    String source = 'cdn',
+    String customCdn = '',
     void Function(int received, int total)? onProgress,
   }) async {
     final work = await Directory.systemTemp.createTemp(
@@ -158,8 +194,23 @@ class UpdateService {
     try {
       final checksumFile = File('${work.path}\\release.sha256');
       final archiveFile = File('${work.path}\\release.zip');
-      await _download(release.checksumUrl, checksumFile);
-      await _download(release.archiveUrl, archiveFile, onProgress: onProgress);
+      await _download(
+        resolveUpdateUrl(
+          release.checksumUrl,
+          source: source,
+          customCdn: customCdn,
+        ),
+        checksumFile,
+      );
+      await _download(
+        resolveUpdateUrl(
+          release.archiveUrl,
+          source: source,
+          customCdn: customCdn,
+        ),
+        archiveFile,
+        onProgress: onProgress,
+      );
 
       final checksumText = await checksumFile.readAsString();
       final expected = RegExp(

@@ -26,6 +26,10 @@ internal sealed class AppSettings
     /// "" asks every time, "exit" quits, "overlay" keeps tracking in the small window.
     public string CloseAction { get; set; } = string.Empty;
 
+    /// How the Flutter updater reaches GitHub: "cdn", "native", or "custom".
+    public string UpdateSource { get; set; } = "cdn";
+    public string CustomUpdateCdn { get; set; } = string.Empty;
+
     public List<CostPreset> CostPresets { get; set; } = new();
 
     /// Legacy/default-id mirror kept for compatibility with settings written by the first cost
@@ -78,6 +82,8 @@ internal sealed class AppSettings
         RiskAcknowledged = value.RiskAcknowledged;
         ConfirmNewSession = value.ConfirmNewSession;
         CloseAction = value.CloseAction;
+        UpdateSource = value.UpdateSource;
+        CustomUpdateCdn = value.CustomUpdateCdn;
         CostPresets = (value.CostPresets ?? new()).Select(CopyCostPreset).ToList();
         SelectedCostPresetId = value.SelectedCostPresetId;
         Normalize();
@@ -98,6 +104,8 @@ internal sealed class AppSettings
         RiskAcknowledged = value.RiskAcknowledged;
         ConfirmNewSession = value.ConfirmNewSession;
         CloseAction = value.CloseAction;
+        UpdateSource = value.UpdateSource;
+        CustomUpdateCdn = value.CustomUpdateCdn;
         NormalizeUiOnly();
     }
 
@@ -156,6 +164,8 @@ internal sealed class AppSettings
         OverlayMode = OverlayMode == "minimal" ? "minimal" : "floating";
         ThemeMode = ThemeMode is "light" or "dark" or "system" ? ThemeMode : "system";
         CloseAction = CloseAction is "exit" or "overlay" ? CloseAction : string.Empty;
+        UpdateSource = UpdateSource is "cdn" or "native" or "custom" ? UpdateSource : "cdn";
+        CustomUpdateCdn = (CustomUpdateCdn ?? string.Empty).Trim();
     }
 
     private static CostPreset CopyCostPreset(CostPreset preset) => new()

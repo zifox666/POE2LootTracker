@@ -83,6 +83,10 @@ class AppController extends ChangeNotifier {
   String get selectedCostPresetId =>
       settings['selectedCostPresetId']?.toString() ?? '';
 
+  String get updateSource => settings['updateSource']?.toString() ?? 'cdn';
+
+  String get customUpdateCdn => settings['customUpdateCdn']?.toString() ?? '';
+
   String get defaultCostPresetId =>
       costPresets
           .where((preset) => preset.isDefault)
@@ -132,7 +136,11 @@ class AppController extends ChangeNotifier {
     updateError = null;
     notifyListeners();
     try {
-      availableUpdate = await updateService.checkForUpdate(appVersion);
+      availableUpdate = await updateService.checkForUpdate(
+        appVersion,
+        source: updateSource,
+        customCdn: customUpdateCdn,
+      );
       updatePhase = availableUpdate == null
           ? UpdatePhase.upToDate
           : UpdatePhase.available;
@@ -154,6 +162,8 @@ class AppController extends ChangeNotifier {
     try {
       await updateService.downloadAndLaunch(
         release,
+        source: updateSource,
+        customCdn: customUpdateCdn,
         onProgress: (received, total) {
           if (total <= 0) return;
           final percent = (received * 100 ~/ total).clamp(0, 100);
@@ -461,6 +471,8 @@ const defaultSettings = <String, dynamic>{
   'priceCacheMinutes': 30,
   'riskAcknowledged': false,
   'confirmNewSession': true,
+  'updateSource': 'cdn',
+  'customUpdateCdn': '',
   // "" asks on every close, "exit" quits, "overlay" keeps tracking in the small window.
   'closeAction': '',
 };

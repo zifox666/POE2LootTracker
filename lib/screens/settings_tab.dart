@@ -6,6 +6,7 @@ import '../app_controller.dart';
 import '../app_theme.dart';
 import '../app_version.dart';
 import '../l10n/app_localizations.dart';
+import '../update_service.dart';
 import '../widgets/common.dart';
 
 class SettingsTab extends StatelessWidget {
@@ -164,6 +165,31 @@ class SettingsTab extends StatelessWidget {
         ]),
         const SizedBox(height: 16),
         _group(context, l.updates, [
+          _choice(
+            context,
+            l.updateSource,
+            controller.updateSource,
+            {
+              'cdn': l.updateSourceCdn,
+              'native': l.updateSourceNative,
+              'custom': l.updateSourceCustom,
+            },
+            (value) => controller.updateSettings({'updateSource': value}),
+          ),
+          if (controller.updateSource == 'cdn')
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                l.updateCdnHint(defaultUpdateCdnPrefix),
+                style: TextStyle(
+                  color: context.colors.mutedForeground,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          if (controller.updateSource == 'custom')
+            _CustomUpdateCdn(controller: controller),
+          const Divider(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -333,6 +359,61 @@ class SettingsTab extends StatelessWidget {
     UpdatePhase.installing => l.installingUpdate,
     UpdatePhase.failed => l.updateCheckFailed(controller.updateError ?? ''),
   };
+}
+
+class _CustomUpdateCdn extends StatefulWidget {
+  const _CustomUpdateCdn({required this.controller});
+  final AppController controller;
+
+  @override
+  State<_CustomUpdateCdn> createState() => _CustomUpdateCdnState();
+}
+
+class _CustomUpdateCdnState extends State<_CustomUpdateCdn> {
+  late final TextEditingController field = TextEditingController(
+    text: widget.controller.customUpdateCdn,
+  );
+
+  @override
+  void dispose() {
+    field.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() =>
+      widget.controller.updateSettings({'customUpdateCdn': field.text.trim()});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Expanded(child: Text(l.customUpdateCdn)),
+          SizedBox(
+            width: 260,
+            child: TextField(
+              controller: field,
+              onSubmitted: (_) => _save(),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: l.customUpdateCdnHint,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          FButton(
+            onPress: _save,
+            variant: FButtonVariant.outline,
+            mainAxisSize: MainAxisSize.min,
+            child: Text(l.save),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _OffsetSettings extends StatefulWidget {
