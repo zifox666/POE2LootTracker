@@ -1,0 +1,102 @@
+{
+  "DisableEntityProcessingInTownOrHideout": false,
+  "EntityReaderMaxDegreeOfParallelism": 4,
+  "DisableAllCounters": true,
+  "HidePerfStatsWhenBg": true,
+  "MinimumPerfStats": true,
+  "HideSettingWindowOnStart": false,
+  "UiLanguage": 10,
+  "KeyPressTimeout": 80,
+  "FontPathName": "C:\\Windows\\Fonts\\msyh.ttc",
+  "FontSize": 18,
+  "FontLanguage": 1,
+  "FontCustomGlyphRange": "",
+  "UniversalFont": false,
+  "MainMenuHotKey": 123,
+  "ShowDataVisualization": false,
+  "ShowKrangledPassiveDetector": false,
+  "ShowGameUiExplorer": false,
+  "ShowElementFinder": false,
+  "ShowPerfStats": true,
+  "ShowPerfProfiler": false,
+  "ShowMemoryDiagnostics": false,
+  "ShowOffsetHelper": false,
+  "OuterCircle": {
+    "Item1": 70,
+    "Item2": false,
+    "Item3": false
+  },
+  "InnerCircle": {
+    "Item1": 30,
+    "Item2": false,
+    "Item3": false
+  },
+  "SkipPreloadedFilesInHideout": true,
+  "CloseWhenGameExit": true,
+  "Vsync": false,
+  "FPSLimit": 60,
+  "FixTaskbarNotShowing": true,
+  "EnableControllerMode": false,
+  "LeaderName": "",
+  "DisableAllRenderingKey": 120,
+  "ElementFinderHotKey": 121,
+  "SpecialNPCPaths": [],
+  "PoiMonstersCategories2": [],
+  "SpecialMiscObjPaths": [
+    {
+      "Item1": "Metadata/MiscellaneousObjects/Expedition/ExpeditionMarker",
+      "Item2": 100
+    },
+    {
+      "Item1": "Metadata/MiscellaneousObjects/Expedition/ExpeditionRelic",
+      "Item2": 101
+    },
+    {
+      "Item1": "Metadata/Terrain/Gallows/Leagues/Expedition/Objects/Expedition",
+      "Item2": 100
+    },
+    {
+      "Item1": "Metadata/MiscellaneousObjects/Checkpoints/Checkpoint_Endgame_Boss",
+      "Item2": 102
+    },
+    {
+      "Item1": "Metadata/MiscellaneousObjects/Expedition2/Expedition2Encounter",
+      "Item2": 103
+    },
+    {
+      "Item1": "Metadata/Terrain/Leagues/Ritual/RitualRuneObject",
+      "Item2": 104
+    },
+    {
+      "Item1": "Metadata/MiscellaneousObjects/Abyss",
+      "Item2": 105
+    },
+    {
+      "Item1": "Metadata/MiscellaneousObjects/Brequel/BrequelInitiator",
+      "Item2": 106
+    },
+    {
+      "Item1": "Metadata/Terrain/Leagues/Sanctum/Objects/SanctumMote",
+      "Item2": 107
+    }
+  ],
+  "MonstersPathsToIgnore": [
+    "Metadata/Monsters/LeagueIncursionNew/Garrison/VaalTrainingDummy",
+    "Metadata/Monsters/PerennialKingStage2/PerennialKingCorpseFriend",
+    "Metadata/Monsters/MarakethSamdDjinn/SandDjinn",
+    "Metadata/Monsters/MarakethWaterDjinn/WaterDjinn",
+    "Metadata/Monsters/MarakethTimeDjinn/FireDjinn",
+    "Metadata/Monsters/Monsters/LivingLightningPlayerSummoned",
+    "Metadata/Monsters/Pirates/CampExplosion",
+    "Metadata/Monsters/CageSkeleton/CageSkeleton",
+    "Metadata/Pet",
+    "Metadata/Monsters/JellfishNettler/JellyfishNettlerFlying",
+    "Metadata/Monsters/MarakethSanctumTrial/Hazards/GroundSpike",
+    "Metadata/Monsters/MarakethSanctumTrial/Hazards/ProjectilePortal"
+  ],
+  "ProcessAllRenderableEntities": false,
+  "IsTaiwanClient": false,
+  "EnableNpcEntityCleanup": true,
+  "EnableStaleEntityCleanup": true,
+  "StaleEntityFrameThreshold": 120
+}

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>tracker_host</AssemblyName>
+    <RootNamespace>LootTracker.App</RootNamespace>
+    <Version>2.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\third_party\gamehelper\GameHelper\GameHelper.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Assets\metaArt.json" CopyToOutputDirectory="PreserveNewest" Link="metaArt.json" />
+    <None Include="Assets\Localization\*.json" CopyToOutputDirectory="PreserveNewest" Link="Localization\%(Filename)%(Extension)" />
+    <None Include="Assets\icons\*.png" CopyToOutputDirectory="PreserveNewest" Link="icons\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

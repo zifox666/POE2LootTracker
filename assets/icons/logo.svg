@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="POE2 Loot Tracker">
+  <!-- A tracked drop: a faceted loot gem framed by a deliberately incomplete scan ring. -->
+  <path fill="#FCD535" d="M12 1.5a10.5 10.5 0 0 0-8.33 4.1l1.88 1.52A8.1 8.1 0 0 1 12 3.9a8.1 8.1 0 0 1 6.44 3.22l1.89-1.52A10.5 10.5 0 0 0 12 1.5Zm8.25 7.6-2.35.64a6 6 0 0 1 .1 1.09 5.99 5.99 0 0 1-6 6 5.99 5.99 0 0 1-6-6c0-.37.03-.73.1-1.09l-2.35-.64a8.4 8.4 0 0 0-.15 1.57 8.4 8.4 0 0 0 8.4 8.4 8.4 8.4 0 0 0 8.4-8.4 8.4 8.4 0 0 0-.15-1.57Z"/>
+  <path fill="#FCD535" d="m12 5.25 4.5 5.58L12 16.9l-4.5-6.07L12 5.25Zm0 2.52-2.38 3.06L12 14.03l2.38-3.2L12 7.77Z"/>
+  <path fill="#0B0E11" d="m12 7.77 2.38 3.06L12 14.03l-2.38-3.2L12 7.77Z"/>
+  <circle cx="12" cy="10.83" r="1.12" fill="#FCD535"/>
+  <path fill="#FCD535" d="M2.25 11.68h2.4v-1.7h-2.4v1.7Zm19.5 0h-2.4v-1.7h2.4v1.7ZM11.15 21.45h1.7v-2.4h-1.7v2.4Z"/>
+</svg>

@@ -1,0 +1,30 @@
+# Normalise text to LF in the repository. The working tree keeps whatever the checkout produces;
+# git compares through this filter, so a CRLF file already on disk is not reported as modified.
+* text=auto
+
+# Explicitly binary. Fonts, icons and the SQLite fixtures must never be line-ending converted --
+# a single byte change in a .ttf breaks font loading, and in a .png it corrupts the image.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.dll binary
+*.exe binary
+*.pdb binary
+*.sqlite3 binary
+*.zip binary
+*.sha256 binary
+
+# Windows-only project: the C++ runner and its CMake files are edited by Visual Studio tooling that
+# expects CRLF, but the build reads either. Keep them normalised like everything else in the tree.
+
+# Vendored upstream sources. Marking these keeps GitHub's language statistics measuring this
+# project's own Dart and C# rather than the GameHelper snapshot under third_party/.
+third_party/gamehelper/** linguist-vendored
+third_party/wanghan008-poe2/** linguist-vendored
+tracker_host/Assets/Localization/*.json linguist-generated
+lib/l10n/app_localizations*.dart linguist-generated
