@@ -583,12 +583,26 @@ class NetworkItemIcon extends StatelessWidget {
   );
 }
 
+/// The one rule for choosing between the Divine and Exalted unit: an amount is shown in Divine once
+/// it is worth *at least* 0.3 of one, and in Exalted below that.
+///
+/// This is deliberately a single function rather than a condition repeated at each call site,
+/// because two callers have to agree on the answer and previously did not. [formatAmount] picks the
+/// unit it renders, and the price editor in `dialogs.dart` seeds its D/E toggle from the same
+/// answer; when the two drifted apart, opening a price could show a different unit than the list it
+/// was opened from.
+///
+/// A zero or unknown rate always means Exalted: with no rate there is nothing to convert by, and
+/// every caller shows the raw Exalted number.
+bool amountUsesDivine(double exalted, double divineRate) =>
+    divineRate > 0 && (exalted / divineRate).abs() >= 0.3;
+
 /// Formats an Exalted amount, switching to Divine once it is worth at least 0.3 of one.
 ///
 /// Two decimals, with trailing zeros dropped. The unit is chosen from the rate the prices were
-/// converted with, so 1 Divine always renders as "1 D".
+/// converted with, so 1 Divine always renders as "1 D". [amountUsesDivine] owns that choice.
 ({String value, String unit}) formatAmount(double exalted, double divineRate) {
-  final useDivine = divineRate > 0 && (exalted / divineRate).abs() >= 0.3;
+  final useDivine = amountUsesDivine(exalted, divineRate);
   final value = useDivine ? exalted / divineRate : exalted;
   String text = value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
   if (text == '-0') text = '0';

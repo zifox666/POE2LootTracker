@@ -402,12 +402,10 @@ class _ManualPriceDialogState extends State<_ManualPriceDialog> {
   );
 
   /// Whether the number in the field means Divine or Exalted. Seeded from the value being edited
-  /// using the same rule the rest of the UI uses to choose a display unit, so opening a price does
-  /// not silently reinterpret it; a brand-new price starts at the Exalted side, which is what an
-  /// item poe.ninja has no listing for is usually worth.
-  late bool divine =
-      widget.divineRate > 0 &&
-      ((widget.currentEx ?? 0) / widget.divineRate).abs() > 0.3;
+  /// through [amountUsesDivine], the same rule the rest of the UI uses to choose a display unit, so
+  /// opening a price does not silently reinterpret it; a brand-new price starts at the Exalted side,
+  /// which is what an item poe.ninja has no listing for is usually worth.
+  late bool divine = amountUsesDivine(widget.currentEx ?? 0, widget.divineRate);
 
   String _initialText() {
     final current = widget.currentEx;
