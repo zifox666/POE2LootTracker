@@ -9,9 +9,9 @@ internal sealed class AppSettings
     public bool AlwaysOnTop { get; set; } = true;
     public bool ClickThrough { get; set; }
     public string OverlayMode { get; set; } = "floating";
-    public string ThemeMode { get; set; } = "system";
-    // The previous default was dark. Mark newly created settings so old defaults can migrate to
-    // the system preference without changing a theme the user picks afterwards.
+    public string OverlayWindowStyle { get; set; } = "frameless";
+    public string ThemeMode { get; set; } = "dark";
+    // Mark newly created settings so older files that predate this flag are normalized once.
     public bool ThemeModeConfigured { get; set; } = true;
     public string Language { get; set; } = string.Empty;
     public string League { get; set; } = "Standard";
@@ -74,6 +74,7 @@ internal sealed class AppSettings
         AlwaysOnTop = value.AlwaysOnTop;
         ClickThrough = value.ClickThrough;
         OverlayMode = value.OverlayMode;
+        OverlayWindowStyle = value.OverlayWindowStyle;
         ThemeMode = value.ThemeMode;
         ThemeModeConfigured = value.ThemeModeConfigured;
         Language = value.Language;
@@ -99,6 +100,7 @@ internal sealed class AppSettings
         AlwaysOnTop = value.AlwaysOnTop;
         ClickThrough = value.ClickThrough;
         OverlayMode = value.OverlayMode;
+        OverlayWindowStyle = value.OverlayWindowStyle;
         ThemeMode = value.ThemeMode;
         ThemeModeConfigured = value.ThemeModeConfigured;
         RiskAcknowledged = value.RiskAcknowledged;
@@ -156,12 +158,13 @@ internal sealed class AppSettings
     {
         if (!ThemeModeConfigured)
         {
-            ThemeMode = "system";
+            ThemeMode = "dark";
             ThemeModeConfigured = true;
         }
         BackgroundOpacity = Math.Clamp(BackgroundOpacity, 0, 1);
         TextOpacity = Math.Clamp(TextOpacity, 0, 1);
         OverlayMode = OverlayMode == "minimal" ? "minimal" : "floating";
+        OverlayWindowStyle = OverlayWindowStyle == "normal" ? "normal" : "frameless";
         ThemeMode = ThemeMode is "light" or "dark" or "system" ? ThemeMode : "system";
         CloseAction = CloseAction is "exit" or "overlay" ? CloseAction : string.Empty;
         UpdateSource = UpdateSource is "cdn" or "native" or "custom" ? UpdateSource : "cdn";

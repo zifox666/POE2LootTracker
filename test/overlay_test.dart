@@ -14,6 +14,12 @@ void main() {
     expect(nextOverlayMode('minimal'), 'floating');
   });
 
+  test('normal overlay window style is opt-in', () {
+    expect(overlayWindowStyle('normal'), 'normal');
+    expect(overlayWindowStyle('frameless'), 'frameless');
+    expect(overlayWindowStyle(null), 'frameless');
+  });
+
   testWidgets('minimal overlay renders exactly two information rows', (
     tester,
   ) async {
@@ -46,6 +52,7 @@ void main() {
 
     expect(find.text('Map time'), findsOneWidget);
     expect(find.text('Current map'), findsOneWidget);
+    expect(find.text('Total revenue'), findsOneWidget);
     expect(find.text('Average map time'), findsOneWidget);
     expect(find.byType(Divider), findsOneWidget);
     controller.dispose();

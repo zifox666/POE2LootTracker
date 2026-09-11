@@ -44,6 +44,13 @@ Future<void> configureOverlayWindow() async {
       // removes the title bar. Without it the overlay could only be dragged, never resized.
       await windowManager.setResizable(true);
       await windowManager.setMinimumSize(const Size(320, 96));
+      // desktop_multi_window creates child windows with an empty native title. A stable title lets
+      // screenshot tools identify this surface as a complete window even though its title bar is
+      // hidden.
+      await windowManager.setTitle('POE2LootTracker - Overlay');
+      // Alt+F4 on a taskbar-visible small window returns to the main window, matching the
+      // overlay's own close control instead of leaving tracking running with no UI.
+      await windowManager.setPreventClose(true);
     });
   } catch (error) {
     debugPrint('overlay: window_manager configuration failed: $error');
@@ -71,6 +78,8 @@ class _OverlayApplicationState extends State<OverlayApplication>
   bool restored = false;
   int restoreRequest = 0;
   bool? appliedClickThrough;
+  bool? appliedAlwaysOnTop;
+  String? appliedWindowStyle;
   static const interaction = OverlayInteraction();
 
   @override
@@ -123,6 +132,11 @@ class _OverlayApplicationState extends State<OverlayApplication>
 
   void _changed() {
     final settings = app.settings;
+    final windowStyle = overlayWindowStyle(settings['overlayWindowStyle']);
+    if (windowStyle != appliedWindowStyle) {
+      appliedWindowStyle = windowStyle;
+      unawaited(_applyWindowStyle(windowStyle));
+    }
     final mode = settings['overlayMode']?.toString() ?? 'floating';
     if (mode != lastMode) {
       final previousMode = lastMode;
@@ -133,20 +147,39 @@ class _OverlayApplicationState extends State<OverlayApplication>
         unawaited(_restoreModeWindowState(mode));
       }
     }
-    unawaited(
-      _windowOption(
-        () => windowManager.setAlwaysOnTop(
-          (settings['alwaysOnTop'] as bool? ?? true) &&
-              !app.screenCaptureActive,
-        ),
-      ),
-    );
+    final alwaysOnTop =
+        (settings['alwaysOnTop'] as bool? ?? true) && !app.screenCaptureActive;
+    // Tracker snapshots rebuild this window regularly. Reasserting HWND_TOPMOST on every rebuild
+    // raises the overlay above QQ/WeChat's screenshot selection surface, which then cannot receive
+    // the pointer or snap to this window. Touch the z-order only when the requested state changes.
+    if (alwaysOnTop != appliedAlwaysOnTop) {
+      appliedAlwaysOnTop = alwaysOnTop;
+      unawaited(_windowOption(() => interaction.setAlwaysOnTop(alwaysOnTop)));
+    }
     final clickThrough = settings['clickThrough'] as bool? ?? false;
     if (clickThrough != appliedClickThrough) {
       appliedClickThrough = clickThrough;
       unawaited(_windowOption(() => interaction.setClickThrough(clickThrough)));
     }
     setState(() {});
+  }
+
+  /// Taskbar visibility is independent from the native title bar: both choices retain the
+  /// frameless overlay surface, while only the normal choice gets a taskbar entry.
+  Future<void> _applyWindowStyle(String style) async {
+    final normal = style == 'normal';
+    await _windowOption(
+      () => windowManager.setTitleBarStyle(
+        TitleBarStyle.hidden,
+        windowButtonVisibility: false,
+      ),
+    );
+    await _windowOption(() => windowManager.setSkipTaskbar(!normal));
+    await _windowOption(() => windowManager.setHasShadow(false));
+    await _windowOption(() => windowManager.setResizable(true));
+    await _windowOption(
+      () => windowManager.setMinimumSize(const Size(320, 96)),
+    );
   }
 
   /// Window options are applied best effort: this runs on every state push, and one failing call
@@ -248,6 +281,9 @@ class _OverlayApplicationState extends State<OverlayApplication>
 
   @override
   void onWindowResized() => _scheduleSave();
+
+  @override
+  void onWindowClose() => _invokeOwnerSafely(owner, 'showMain');
 
   @override
   Widget build(BuildContext context) {
@@ -597,7 +633,7 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
               ),
               Expanded(
                 child: _OverlayMetric(
-                  label: l.sessionRevenue,
+                  label: l.totalRevenue,
                   amount: s.totalProfitEx,
                   rate: s.divineRate,
                   fontSize: 16,
@@ -855,6 +891,20 @@ class MinimalOverlay extends StatelessWidget {
                           s.divineRate,
                           fontSize: 14,
                           color: s.currentProfitEx < 0
+                              ? tradingRed
+                              : tradingGreen,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: _InlineLabel(
+                        label: l.totalRevenue,
+                        stacked: stackBottomMetrics,
+                        child: AmountView(
+                          s.totalProfitEx,
+                          s.divineRate,
+                          fontSize: 14,
+                          color: s.totalProfitEx < 0
                               ? tradingRed
                               : tradingGreen,
                         ),
@@ -1137,6 +1187,7 @@ class _OverlayQuickSettingsState extends State<_OverlayQuickSettings> {
     final l = AppLocalizations.of(context);
     final settings = widget.app.settings;
     final mode = settings['overlayMode']?.toString() ?? 'floating';
+    final windowStyle = overlayWindowStyle(settings['overlayWindowStyle']);
     final backgroundOpacity =
         ((settings['backgroundOpacity'] as num?)?.toDouble().clamp(0, 1) ?? .94)
             .toDouble();
@@ -1175,6 +1226,30 @@ class _OverlayQuickSettingsState extends State<_OverlayQuickSettings> {
                       ],
                       onChanged: (value) {
                         if (value != null) _update({'overlayMode': value});
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: Text(l.windowAppearance)),
+                    DropdownButton<String>(
+                      value: windowStyle,
+                      items: [
+                        DropdownMenuItem(
+                          value: 'frameless',
+                          child: Text(l.framelessWindow),
+                        ),
+                        DropdownMenuItem(
+                          value: 'normal',
+                          child: Text(l.normalWindow),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          _update({'overlayWindowStyle': value});
+                        }
                       },
                     ),
                   ],
@@ -1256,6 +1331,10 @@ class _OverlayQuickSettingsState extends State<_OverlayQuickSettings> {
 @visibleForTesting
 String nextOverlayMode(Object? current) =>
     current == 'minimal' ? 'floating' : 'minimal';
+
+/// Keep old or malformed persisted values compatible with the original presentation.
+String overlayWindowStyle(Object? value) =>
+    value == 'normal' ? 'normal' : 'frameless';
 
 void _invokeOwnerSafely(
   WindowController owner,

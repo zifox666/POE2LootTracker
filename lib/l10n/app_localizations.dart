@@ -356,11 +356,11 @@ abstract class AppLocalizations {
   /// **'Current map'**
   String get currentMap;
 
-  /// No description provided for @sessionRevenue.
+  /// No description provided for @totalRevenue.
   ///
   /// In en, this message translates to:
-  /// **'Session revenue'**
-  String get sessionRevenue;
+  /// **'Total revenue'**
+  String get totalRevenue;
 
   /// No description provided for @revenuePerHour.
   ///
@@ -385,6 +385,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Map time'**
   String get mapTime;
+
+  /// No description provided for @efficiency.
+  ///
+  /// In en, this message translates to:
+  /// **'Efficiency'**
+  String get efficiency;
 
   /// No description provided for @averageMapTime.
   ///
@@ -512,6 +518,18 @@ abstract class AppLocalizations {
   /// **'League'**
   String get league;
 
+  /// No description provided for @season.
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get season;
+
+  /// No description provided for @onlinePlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Players online'**
+  String get onlinePlayers;
+
   /// No description provided for @syncStatus.
   ///
   /// In en, this message translates to:
@@ -631,6 +649,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Minimal'**
   String get minimal;
+
+  /// No description provided for @windowAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Window appearance'**
+  String get windowAppearance;
+
+  /// No description provided for @framelessWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Frameless'**
+  String get framelessWindow;
+
+  /// No description provided for @normalWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'normalWindow'**
+  String get normalWindow;
 
   /// No description provided for @alwaysOnTop.
   ///

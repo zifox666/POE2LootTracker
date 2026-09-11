@@ -144,19 +144,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get currentMap => '当前地图';
 
   @override
-  String get sessionRevenue => '会话收益';
+  String get totalRevenue => '总收益';
 
   @override
   String get revenuePerHour => '每小时收益';
 
   @override
-  String get mapCount => '地图数';
+  String get mapCount => '地图次数';
 
   @override
-  String get sessionTime => '会话时长';
+  String get sessionTime => '总时长';
 
   @override
-  String get mapTime => '图内计时';
+  String get mapTime => '图内时长';
+
+  @override
+  String get efficiency => '效率';
 
   @override
   String get averageMapTime => '平均每图时长';
@@ -222,6 +225,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get league => '联赛';
 
   @override
+  String get season => '赛季';
+
+  @override
+  String get onlinePlayers => '在线人数';
+
+  @override
   String get syncStatus => '同步状态';
 
   @override
@@ -280,6 +289,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get minimal => '极简小窗';
+
+  @override
+  String get windowAppearance => '窗口外观';
+
+  @override
+  String get framelessWindow => '无边框';
+
+  @override
+  String get normalWindow => '正常窗口';
 
   @override
   String get alwaysOnTop => '窗口置顶';

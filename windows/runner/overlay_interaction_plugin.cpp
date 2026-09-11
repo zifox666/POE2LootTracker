@@ -102,6 +102,24 @@ class OverlayInteractionPlugin : public flutter::Plugin {
       return;
     }
 
+    if (call.method_name() == "setAlwaysOnTop") {
+      const auto* enabled = std::get_if<bool>(call.arguments());
+      if (enabled == nullptr) {
+        result->Error("bad-arguments", "setAlwaysOnTop expects a boolean");
+        return;
+      }
+      const BOOL changed = ::SetWindowPos(
+          window_, *enabled ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
+          SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+      if (changed == FALSE) {
+        result->Error("set-window-pos-failed",
+                      "Windows could not update the overlay z-order");
+        return;
+      }
+      result->Success(flutter::EncodableValue(true));
+      return;
+    }
+
     if (call.method_name() == "ensureVisible") {
       if (::IsIconic(window_)) {
         ::ShowWindow(window_, SW_RESTORE);

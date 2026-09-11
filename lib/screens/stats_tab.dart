@@ -121,124 +121,66 @@ class _StatsTabState extends State<StatsTab> {
     required Duration activeTime,
   }) {
     final rate = snapshot.divineRate;
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      crossAxisAlignment: WrapCrossAlignment.end,
-      children: [
-        SizedBox(
-          width: 230,
-          child: _AmountMetric(
-            label: l.sessionRevenue,
-            amount: profit,
-            rate: rate,
-          ),
-        ),
-        SizedBox(
-          width: 230,
-          child: _AmountMetric(
-            label: l.revenuePerHour,
-            amount: perHour,
-            rate: rate,
-          ),
-        ),
-        SizedBox(
-          width: 170,
-          child: MetricCard(
-            label: l.mapTime,
-            value: formatDuration(activeTime),
-          ),
-        ),
-        _stacked(context, [
-          (l.sessionTime, formatDuration(snapshot.sessionTime)),
-          (l.mapCount, '${snapshot.mapCount}'),
-        ]),
-        AppCard(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          child: Wrap(
-            spacing: 16,
-            runSpacing: 8,
+    // The dashboard intentionally starts with only the three figures used while farming.  This
+    // keeps the revenue figures readable at a glance instead of pushing the time statistics onto
+    // a second wrapped row.
+    final trend = _cumulativeProfit(maps);
+    final cards = [
+      _AmountMetric(
+        label: l.totalRevenue,
+        amount: profit,
+        rate: rate,
+        trend: trend,
+        color: profit < 0 ? tradingRed : const Color(0xFFFF7A45),
+      ),
+      _AmountMetric(
+        label: l.revenuePerHour,
+        amount: perHour,
+        rate: rate,
+        trend: maps.map((map) => _perMinute(map)).toList(growable: false),
+        color: perHour < 0 ? tradingRed : tradingGreen,
+        subtitle: activeTime.inSeconds > 0
+            ? '${l.mapTime} ${formatDuration(activeTime)}'
+            : null,
+      ),
+      _DurationMetric(
+        mapTime: activeTime,
+        sessionTime: snapshot.sessionTime,
+        mapCount: snapshot.mapCount,
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 880) {
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              IconCount(
-                icon: 'monster_normal',
-                count: snapshot.kills[0],
-                compact: true,
-              ),
-              IconCount(
-                icon: 'monster_magic',
-                count: snapshot.kills[1],
-                compact: true,
-              ),
-              IconCount(
-                icon: 'monster_rare',
-                count: snapshot.kills[2],
-                compact: true,
-              ),
-              IconCount(
-                icon: 'monster_unique',
-                count: snapshot.kills[3],
-                compact: true,
-              ),
+              for (final card in cards) SizedBox(width: 280, child: card),
             ],
-          ),
-        ),
-        SizedBox(
-          width: 250,
-          child: _Selector<String?>(
-            label: l.selectSession,
-            value: widget.controller.selectedSessionId,
-            width: 250,
-            items: [
-              DropdownMenuItem(value: null, child: Text(l.currentSession)),
-              ...widget.controller.sessions
-                  .where((session) => session.id != snapshot.activeSessionId)
-                  .map(
-                    (session) => DropdownMenuItem(
-                      value: session.id,
-                      child: Text(_sessionLabel(session)),
-                    ),
-                  ),
+          );
+        }
+        return Row(
+          children: [
+            for (var index = 0; index < cards.length; index++) ...[
+              if (index > 0) const SizedBox(width: 12),
+              Expanded(child: cards[index]),
             ],
-            onChanged: widget.controller.selectSession,
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
-  /// Two labelled figures stacked in one card, as the 总时长 / 地图次数 pair.
-  Widget _stacked(BuildContext context, List<(String, String)> rows) => AppCard(
-    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) const SizedBox(height: 8),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                rows[i].$1,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: context.colors.mutedForeground,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                rows[i].$2,
-                style: context.numberStyle.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    ),
-  );
+  List<double> _cumulativeProfit(List<MapSummary> maps) {
+    var total = 0.0;
+    return [for (final map in maps.reversed) total += map.profitEx];
+  }
+
+  double _perMinute(MapSummary map) => map.activeTime.inSeconds == 0
+      ? 0
+      : map.profitEx / map.activeTime.inSeconds * 60;
 
   Widget _mapLog(
     BuildContext context,
@@ -260,9 +202,37 @@ class _StatsTabState extends State<StatsTab> {
             padding: const EdgeInsets.all(18),
             child: SectionTitle(
               l.mapLog,
-              trailing: Text(
-                l.itemsCount(maps.length),
-                style: TextStyle(color: context.colors.mutedForeground),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l.itemsCount(maps.length),
+                    style: TextStyle(color: context.colors.mutedForeground),
+                  ),
+                  const SizedBox(width: 4),
+                  PopupMenuButton<String>(
+                    tooltip: l.selectSession,
+                    icon: const AppSvg('chevron_down', size: 16),
+                    onSelected: (value) => widget.controller.selectSession(
+                      value.isEmpty ? null : value,
+                    ),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(value: '', child: Text(l.currentSession)),
+                      ...widget.controller.sessions
+                          .where(
+                            (session) =>
+                                session.id !=
+                                widget.controller.snapshot.activeSessionId,
+                          )
+                          .map(
+                            (session) => PopupMenuItem(
+                              value: session.id,
+                              child: Text(_sessionLabel(session)),
+                            ),
+                          ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -302,9 +272,11 @@ class _StatsTabState extends State<StatsTab> {
       ),
       child: Row(
         children: [
-          const Expanded(flex: 5, child: SizedBox()),
+          const Expanded(flex: 4, child: SizedBox()),
+          Expanded(flex: 2, child: Text(l.pickups)),
           Expanded(flex: 2, child: Text(l.cost)),
           Expanded(flex: 2, child: Text(l.profit)),
+          Expanded(flex: 2, child: Text(l.efficiency)),
           SizedBox(
             width: 62,
             child: Text(l.duration, textAlign: TextAlign.right),
@@ -317,6 +289,8 @@ class _StatsTabState extends State<StatsTab> {
   Widget _mapRow(BuildContext context, MapSummary map) {
     final selected = widget.controller.selectedMapId == map.id;
     final rate = widget.controller.snapshot.divineRate;
+    final pickup = map.profitEx + map.costEx;
+    final efficiency = _perMinute(map);
     return InkWell(
       onTap: () => widget.controller.selectMap(selected ? null : map.id),
       child: Container(
@@ -328,7 +302,7 @@ class _StatsTabState extends State<StatsTab> {
         child: Row(
           children: [
             Expanded(
-              flex: 5,
+              flex: 4,
               child: Row(
                 children: [
                   if (map.active) ...[
@@ -362,6 +336,15 @@ class _StatsTabState extends State<StatsTab> {
             Expanded(
               flex: 2,
               child: AmountView(
+                pickup,
+                rate,
+                fontSize: 12,
+                color: pickup < 0 ? tradingRed : null,
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: AmountView(
                 map.costEx,
                 rate,
                 fontSize: 12,
@@ -375,6 +358,16 @@ class _StatsTabState extends State<StatsTab> {
                 rate,
                 fontSize: 12,
                 color: map.profitEx < 0 ? tradingRed : tradingGreen,
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(
+                formatNumber(efficiency),
+                style: context.numberStyle.copyWith(
+                  fontSize: 12,
+                  color: efficiency < 0 ? tradingRed : tradingGreen,
+                ),
               ),
             ),
             SizedBox(
@@ -518,75 +511,164 @@ class _AmountMetric extends StatelessWidget {
     required this.label,
     required this.amount,
     required this.rate,
+    required this.trend,
+    required this.color,
+    this.subtitle,
   });
   final String label;
   final double amount;
   final double rate;
+  final List<double> trend;
+  final Color color;
+  final String? subtitle;
   @override
   Widget build(BuildContext context) => AppCard(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: context.colors.mutedForeground),
-        ),
-        const SizedBox(height: 10),
-        AmountView(
-          amount,
-          rate,
-          fontSize: 22,
-          color: amount < 0 ? tradingRed : tradingGreen,
-        ),
-      ],
+    padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
+    child: SizedBox(
+      height: 136,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            top: 77,
+            child: IgnorePointer(
+              child: _TrendLine(values: trend, color: color),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.colors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: 12),
+              AmountView(amount, rate, fontSize: 27, color: color),
+              if (subtitle != null) ...[
+                const SizedBox(height: 5),
+                Text(
+                  subtitle!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.mutedForeground,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     ),
   );
 }
 
-class _Selector<T> extends StatelessWidget {
-  const _Selector({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    required this.width,
+class _DurationMetric extends StatelessWidget {
+  const _DurationMetric({
+    required this.mapTime,
+    required this.sessionTime,
+    required this.mapCount,
   });
-  final String label;
-  final T value;
-  final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?> onChanged;
-  final double width;
+
+  final Duration mapTime;
+  final Duration sessionTime;
+  final int mapCount;
+
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: width,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: context.colors.mutedForeground),
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final rows = [
+      (l.mapTime, formatDuration(mapTime)),
+      (l.sessionTime, formatDuration(sessionTime)),
+      (l.mapCount, '$mapCount'),
+    ];
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      child: SizedBox(
+        height: 140,
+        child: Column(
+          children: [
+            for (var index = 0; index < rows.length; index++) ...[
+              if (index > 0) Divider(height: 1, color: context.colors.border),
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      rows[index].$1,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.colors.mutedForeground,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      rows[index].$2,
+                      style: context.numberStyle.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: brandYellow,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(height: 7),
-        Container(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: context.colors.card,
-            border: Border.all(color: context.colors.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              isExpanded: true,
-              dropdownColor: context.colors.card,
-              icon: const AppSvg('chevron_down', size: 16),
-              items: items,
-              onChanged: onChanged,
-            ),
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+}
+
+class _TrendLine extends StatelessWidget {
+  const _TrendLine({required this.values, required this.color});
+
+  final List<double> values;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: _TrendLinePainter(
+      values: values,
+      color: color.withValues(alpha: .38),
     ),
   );
+}
+
+class _TrendLinePainter extends CustomPainter {
+  const _TrendLinePainter({required this.values, required this.color});
+
+  final List<double> values;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.length < 2 || size.isEmpty) return;
+    final minimum = values.reduce(math.min);
+    final maximum = values.reduce(math.max);
+    final span = maximum - minimum;
+    final path = Path();
+    for (var index = 0; index < values.length; index++) {
+      final x = size.width * index / (values.length - 1);
+      final normalized = span == 0 ? .5 : (values[index] - minimum) / span;
+      final y = size.height - normalized * size.height;
+      if (index == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrendLinePainter oldDelegate) =>
+      oldDelegate.values != values || oldDelegate.color != color;
 }

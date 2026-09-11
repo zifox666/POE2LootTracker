@@ -6,6 +6,7 @@ import '../app_controller.dart';
 import '../app_theme.dart';
 import '../app_version.dart';
 import '../l10n/app_localizations.dart';
+import '../overlay_window.dart' show overlayWindowStyle;
 import '../update_service.dart';
 import '../widgets/common.dart';
 
@@ -42,7 +43,7 @@ class SettingsTab extends StatelessWidget {
           _choice(
             context,
             l.theme,
-            settings['themeMode']?.toString() ?? 'system',
+            settings['themeMode']?.toString() ?? 'dark',
             {'system': l.systemDefault, 'dark': l.dark, 'light': l.light},
             (value) => controller.updateSettings({'themeMode': value}),
           ),
@@ -74,6 +75,13 @@ class SettingsTab extends StatelessWidget {
             settings['overlayMode']?.toString() ?? 'floating',
             {'floating': l.floating, 'minimal': l.minimal},
             (value) => controller.updateSettings({'overlayMode': value}),
+          ),
+          _choice(
+            context,
+            l.windowAppearance,
+            overlayWindowStyle(settings['overlayWindowStyle']),
+            {'frameless': l.framelessWindow, 'normal': l.normalWindow},
+            (value) => controller.updateSettings({'overlayWindowStyle': value}),
           ),
           _toggle(
             context,

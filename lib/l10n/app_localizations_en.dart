@@ -148,7 +148,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentMap => 'Current map';
 
   @override
-  String get sessionRevenue => 'Session revenue';
+  String get totalRevenue => 'Total revenue';
 
   @override
   String get revenuePerHour => 'Revenue per hour';
@@ -161,6 +161,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapTime => 'Map time';
+
+  @override
+  String get efficiency => 'Efficiency';
 
   @override
   String get averageMapTime => 'Average map time';
@@ -226,6 +229,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get league => 'League';
 
   @override
+  String get season => 'Season';
+
+  @override
+  String get onlinePlayers => 'Players online';
+
+  @override
   String get syncStatus => 'Sync status';
 
   @override
@@ -284,6 +293,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get minimal => 'Minimal';
+
+  @override
+  String get windowAppearance => 'Window appearance';
+
+  @override
+  String get framelessWindow => 'Frameless';
+
+  @override
+  String get normalWindow => 'normalWindow';
 
   @override
   String get alwaysOnTop => 'Always on top';

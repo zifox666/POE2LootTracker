@@ -3,6 +3,8 @@ import 'package:window_manager/window_manager.dart';
 
 import '../app_controller.dart';
 import '../app_theme.dart';
+import '../app_version.dart';
+import '../dialogs.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/common.dart';
 import 'market_tab.dart';
@@ -119,7 +121,7 @@ class _TitleBar extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final paused = controller.snapshot.trackingPaused;
     return SizedBox(
-      height: 54,
+      height: 62,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: context.colors.card,
@@ -135,18 +137,54 @@ class _TitleBar extends StatelessWidget {
                     children: [
                       const AppLogo(size: 24),
                       const SizedBox(width: 10),
-                      Text(
-                        l.appTitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l.appTitle,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Row(
+                            children: [
+                              Text(
+                                'v$appVersionFull',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: context.colors.mutedForeground,
+                                ),
+                              ),
+                              if (controller.updatePhase ==
+                                      UpdatePhase.available &&
+                                  controller.availableUpdate != null) ...[
+                                const SizedBox(width: 6),
+                                _UpdateBadge(
+                                  onTap: () => _openUpdate(context),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
             ),
+            _HeaderStatus(
+              label: l.season,
+              value: controller.leagueName,
+            ),
+            _HeaderStatus(
+              label: l.onlinePlayers,
+              value: _formatPlayerCount(controller.onlinePlayers),
+              accent: tradingGreen,
+            ),
+            const SizedBox(width: 10),
             // Session controls. The host has always had pause/resume and start-new-session; they
             // were only reachable from the tray menu, which left no way to exercise them (and
             // nothing to see the "resumes by itself when you enter a map" behaviour from).
@@ -169,6 +207,97 @@ class _TitleBar extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _openUpdate(BuildContext context) async {
+    final release = controller.availableUpdate;
+    if (release == null || controller.updatePhase != UpdatePhase.available) {
+      return;
+    }
+    final install = await confirmUpdateAvailable(
+      context,
+      version: release.version,
+    );
+    if (install && context.mounted) {
+      await showUpdateProgress(context, controller: controller);
+    }
+  }
+}
+
+class _UpdateBadge extends StatelessWidget {
+  const _UpdateBadge({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(4),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: brandYellow,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Text(
+        'NEW',
+        style: TextStyle(
+          color: Color(0xFF181A20),
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          letterSpacing: .3,
+        ),
+      ),
+    ),
+  );
+}
+
+class _HeaderStatus extends StatelessWidget {
+  const _HeaderStatus({
+    required this.label,
+    required this.value,
+    this.accent,
+  });
+
+  final String label;
+  final String value;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(maxWidth: 150),
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    decoration: BoxDecoration(
+      border: Border(left: BorderSide(color: context.colors.border)),
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: context.colors.mutedForeground),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.numberStyle.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: accent,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+String _formatPlayerCount(int? value) {
+  if (value == null) return '—';
+  return value
+      .toString()
+      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
 }
 
 class _TitleAction extends StatelessWidget {

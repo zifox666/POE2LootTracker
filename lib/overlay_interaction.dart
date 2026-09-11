@@ -26,6 +26,10 @@ class OverlayInteraction {
         'height': controlsHeight,
       });
 
+  /// Changes the native z-order without activating the overlay.
+  Future<void> setAlwaysOnTop(bool enabled) =>
+      _channel.invokeMethod<void>('setAlwaysOnTop', enabled);
+
   /// Shows this engine's own native window and confirms that Windows considers it visible.
   ///
   /// The owner waits for this acknowledgement before hiding the main window. This prevents a

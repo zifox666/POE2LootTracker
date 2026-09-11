@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'app_version.dart';
 import 'host_client.dart';
 import 'models.dart';
+import 'steam_stats_service.dart';
 import 'update_service.dart';
 
 enum UpdatePhase {
@@ -23,13 +24,17 @@ class AppController extends ChangeNotifier {
   AppController({
     HostClient? host,
     UpdateService? updateService,
+    SteamStatsService? steamStatsService,
     this.startHost = true,
   }) : host = host ?? HostClient(),
-       updateService = updateService ?? UpdateService();
+       updateService = updateService ?? UpdateService(),
+       steamStatsService = steamStatsService ?? SteamStatsService();
   final HostClient host;
   final UpdateService updateService;
+  final SteamStatsService steamStatsService;
   final bool startHost;
   StreamSubscription<Map<String, dynamic>>? _events;
+  Timer? _onlinePlayersTimer;
 
   TrackerSnapshot snapshot = TrackerSnapshot.empty;
   List<SessionRow> sessions = [];
@@ -49,6 +54,7 @@ class AppController extends ChangeNotifier {
   UpdateRelease? availableUpdate;
   String? updateError;
   int updateDownloadPercent = 0;
+  int? onlinePlayers;
   DateTime _lastSnapshotNotify = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// Minimum spacing between rebuilds driven by `trackerSnapshot` pushes from the host.
@@ -87,6 +93,11 @@ class AppController extends ChangeNotifier {
 
   String get customUpdateCdn => settings['customUpdateCdn']?.toString() ?? '';
 
+  String get leagueName {
+    final league = settings['league']?.toString().trim() ?? '';
+    return league.isEmpty ? 'Standard' : league;
+  }
+
   String get defaultCostPresetId =>
       costPresets
           .where((preset) => preset.isDefault)
@@ -124,6 +135,24 @@ class AppController extends ChangeNotifier {
       notifyListeners();
     }
     unawaited(checkForUpdates(silent: true));
+    unawaited(refreshOnlinePlayers());
+    _onlinePlayersTimer ??= Timer.periodic(
+      const Duration(minutes: 5),
+      (_) => unawaited(refreshOnlinePlayers()),
+    );
+  }
+
+  Future<void> refreshOnlinePlayers() async {
+    try {
+      final players = await steamStatsService.currentPlayers();
+      if (players == onlinePlayers) return;
+      onlinePlayers = players;
+      notifyListeners();
+    } catch (exception) {
+      // Network failures must not compete with tracking errors or make the title bar noisy.  A
+      // later periodic refresh will retry, and the UI deliberately keeps its last known value.
+      debugPrint('steam: player count refresh failed: $exception');
+    }
   }
 
   Future<void> checkForUpdates({bool silent = false}) async {
@@ -452,8 +481,10 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _events?.cancel();
+    _onlinePlayersTimer?.cancel();
     if (startHost) unawaited(host.dispose());
     updateService.close();
+    steamStatsService.close();
     super.dispose();
   }
 }
@@ -464,7 +495,8 @@ const defaultSettings = <String, dynamic>{
   'alwaysOnTop': true,
   'clickThrough': false,
   'overlayMode': 'floating',
-  'themeMode': 'system',
+  'overlayWindowStyle': 'frameless',
+  'themeMode': 'dark',
   'themeModeConfigured': true,
   'language': '',
   'league': 'Standard',
