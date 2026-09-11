@@ -583,12 +583,12 @@ class NetworkItemIcon extends StatelessWidget {
   );
 }
 
-/// Formats an Exalted amount, switching to Divine once it is worth more than 0.3 of one.
+/// Formats an Exalted amount, switching to Divine once it is worth at least 0.3 of one.
 ///
 /// Two decimals, with trailing zeros dropped. The unit is chosen from the rate the prices were
 /// converted with, so 1 Divine always renders as "1 D".
 ({String value, String unit}) formatAmount(double exalted, double divineRate) {
-  final useDivine = divineRate > 0 && (exalted / divineRate).abs() > 0.3;
+  final useDivine = divineRate > 0 && (exalted / divineRate).abs() >= 0.3;
   final value = useDivine ? exalted / divineRate : exalted;
   String text = value.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
   if (text == '-0') text = '0';

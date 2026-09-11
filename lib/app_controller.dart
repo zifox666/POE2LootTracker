@@ -406,9 +406,22 @@ class AppController extends ChangeNotifier {
       // widget tree -- and with it the semantics tree the Windows accessibility bridge walks --
       // four times a second. Every duration on screen is rendered in whole seconds, so collapsing
       // those into one update per second costs nothing visible and quarters that churn.
+      final previousPickup = snapshot.recentPickups.isEmpty
+          ? null
+          : snapshot.recentPickups.first;
       _readSnapshot(event['payload']);
+      final newestPickup = snapshot.recentPickups.isEmpty
+          ? null
+          : snapshot.recentPickups.first;
+      final pickupChanged =
+          previousPickup?.key != newestPickup?.key ||
+          previousPickup?.count != newestPickup?.count ||
+          previousPickup?.pickedUpUtc != newestPickup?.pickedUpUtc;
       final now = DateTime.now();
-      if (now.difference(_lastSnapshotNotify) < snapshotNotifyInterval) return;
+      if (!pickupChanged &&
+          now.difference(_lastSnapshotNotify) < snapshotNotifyInterval) {
+        return;
+      }
       _lastSnapshotNotify = now;
       notifyListeners();
       return;
@@ -496,6 +509,9 @@ const defaultSettings = <String, dynamic>{
   'clickThrough': false,
   'overlayMode': 'floating',
   'overlayWindowStyle': 'frameless',
+  'pickupToastsEnabled': true,
+  'pickupToastMaxVisible': 3,
+  'pickupToastDurationSeconds': 2.5,
   'themeMode': 'dark',
   'themeModeConfigured': true,
   'language': '',
@@ -540,6 +556,20 @@ Map<String, dynamic> snapshotToJson(TrackerSnapshot value) => {
           'totalEx': e.totalEx,
           'priced': e.priced,
           'iconUrl': e.iconUrl,
+        },
+      )
+      .toList(),
+  'recentPickups': value.recentPickups
+      .map(
+        (e) => {
+          'key': e.key,
+          'name': e.name,
+          'count': e.count,
+          'unitEx': e.unitEx,
+          'totalEx': e.totalEx,
+          'priced': e.priced,
+          'iconUrl': e.iconUrl,
+          'pickedUpUtc': e.pickedUpUtc?.toIso8601String(),
         },
       )
       .toList(),

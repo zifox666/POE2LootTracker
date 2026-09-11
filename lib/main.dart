@@ -11,6 +11,7 @@ import 'app_theme.dart';
 import 'dialogs.dart';
 import 'l10n/app_localizations.dart';
 import 'overlay_window.dart';
+import 'recent_loot_window.dart';
 import 'screens/main_shell.dart';
 import 'system_proxy.dart';
 import 'window_coordinator.dart';
@@ -51,6 +52,16 @@ Future<void> main(List<String> args) async {
     await configureOverlayWindow();
     _runWithoutSemantics(
       OverlayApplication(
+        currentWindow: currentWindow,
+        ownerId: arguments['ownerId'] as String? ?? '',
+      ),
+    );
+    return;
+  }
+  if (arguments['kind'] == 'recentLoot') {
+    await configureRecentLootWindow();
+    _runWithoutSemantics(
+      RecentLootApplication(
         currentWindow: currentWindow,
         ownerId: arguments['ownerId'] as String? ?? '',
       ),
@@ -329,6 +340,7 @@ class _DesktopShellState extends State<_DesktopShell> {
   Widget build(BuildContext context) => MainShell(
     controller: widget.controller,
     onShowOverlay: widget.coordinator.showOverlay,
+    onShowRecentLoot: widget.coordinator.previewRecentLoot,
     onNewSession: _newSession,
     onCloseWindow: _closeMainWindow,
   );

@@ -19,6 +19,32 @@ public sealed class TrackingEngineTests
     }
 
     [Fact]
+    public void RecentPickupsKeepOnlyPositiveChangesNewestFirst()
+    {
+        var history = new List<LootTrackerEngine.RecentPickup>
+        {
+            new("old", 1, DateTime.UnixEpoch),
+        };
+        var now = DateTime.UtcNow;
+
+        LootTrackerEngine.AppendRecentPickups(
+            history,
+            new Dictionary<string, long> { ["divine"] = 2, ["spent"] = -1 },
+            now,
+            limit: 2);
+
+        Assert.Collection(
+            history,
+            pickup =>
+            {
+                Assert.Equal("divine", pickup.Key);
+                Assert.Equal(2, pickup.Count);
+                Assert.Equal(now, pickup.PickedUpUtc);
+            },
+            pickup => Assert.Equal("old", pickup.Key));
+    }
+
+    [Fact]
     public void MapSpecificCostWinsAndConvertsDivinesAtEntryRate()
     {
         var selected = new CostPreset { Id = "selected", Name = "Generic", Amount = 8, Currency = "E", IsDefault = true };

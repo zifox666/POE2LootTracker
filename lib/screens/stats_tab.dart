@@ -50,23 +50,11 @@ class _StatsTabState extends State<StatsTab> {
         ? listOfMaps(detail['loot']).map(LootEntry.fromJson).toList()
         : snapshot.loot;
 
-    // With a run selected every figure describes that run; otherwise the session.
-    // The `0.0` literals matter: `(x as num?)?.toDouble() ?? 0` would infer `num` and cannot be
-    // passed where a double is expected.
-    final profit = hasMap
-        ? (mapHeader['profitEx'] as num?)?.toDouble() ?? 0.0
-        : snapshot.totalProfitEx;
-    final activeTime = hasMap
-        ? Duration(milliseconds: (mapHeader['activeMs'] as num?)?.toInt() ?? 0)
-        // Total time spent inside maps, not the session clock: the two labels sit next to each other
-        // and a session clock labelled "in-map time" never stops, which reads as the overlay's timer
-        // having frozen.
-        : snapshot.activeTime;
-    final perHour = hasMap
-        ? (activeTime.inSeconds > 0
-              ? profit / activeTime.inSeconds * 3600
-              : 0.0)
-        : snapshot.perHourEx;
+    // The header is a session dashboard. Selecting a row is deliberately only a lower-panel detail
+    // action, so comparing a map's drops never makes the total revenue and time cards jump around.
+    final profit = snapshot.totalProfitEx;
+    final activeTime = snapshot.activeTime;
+    final perHour = snapshot.perHourEx;
 
     return Column(
       children: [
@@ -121,9 +109,8 @@ class _StatsTabState extends State<StatsTab> {
     required Duration activeTime,
   }) {
     final rate = snapshot.divineRate;
-    // The dashboard intentionally starts with only the three figures used while farming.  This
-    // keeps the revenue figures readable at a glance instead of pushing the time statistics onto
-    // a second wrapped row.
+    // The dashboard keeps the four figures used while farming together, instead of pushing the
+    // time and kill statistics onto a second wrapped row.
     final trend = _cumulativeProfit(maps);
     final cards = [
       _AmountMetric(
@@ -139,10 +126,8 @@ class _StatsTabState extends State<StatsTab> {
         rate: rate,
         trend: maps.map((map) => _perMinute(map)).toList(growable: false),
         color: perHour < 0 ? tradingRed : tradingGreen,
-        subtitle: activeTime.inSeconds > 0
-            ? '${l.mapTime} ${formatDuration(activeTime)}'
-            : null,
       ),
+      _KillMetric(kills: snapshot.kills),
       _DurationMetric(
         mapTime: activeTime,
         sessionTime: snapshot.sessionTime,
@@ -153,12 +138,21 @@ class _StatsTabState extends State<StatsTab> {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 880) {
-          return Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              for (final card in cards) SizedBox(width: 280, child: card),
-            ],
+          // A narrow window cannot hold four full-size cards without stealing the map log's usable
+          // height. Keep the compact dashboard one line high and let the row scroll horizontally.
+          return SizedBox(
+            height: 168,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (var index = 0; index < cards.length; index++) ...[
+                    if (index > 0) const SizedBox(width: 12),
+                    SizedBox(width: 280, child: cards[index]),
+                  ],
+                ],
+              ),
+            ),
           );
         }
         return Row(
@@ -276,7 +270,7 @@ class _StatsTabState extends State<StatsTab> {
           Expanded(flex: 2, child: Text(l.pickups)),
           Expanded(flex: 2, child: Text(l.cost)),
           Expanded(flex: 2, child: Text(l.profit)),
-          Expanded(flex: 2, child: Text(l.efficiency)),
+          Expanded(flex: 2, child: Text(l.totalKills)),
           SizedBox(
             width: 62,
             child: Text(l.duration, textAlign: TextAlign.right),
@@ -290,7 +284,7 @@ class _StatsTabState extends State<StatsTab> {
     final selected = widget.controller.selectedMapId == map.id;
     final rate = widget.controller.snapshot.divineRate;
     final pickup = map.profitEx + map.costEx;
-    final efficiency = _perMinute(map);
+    final totalKills = map.kills.fold<int>(0, (total, kills) => total + kills);
     return InkWell(
       onTap: () => widget.controller.selectMap(selected ? null : map.id),
       child: Container(
@@ -363,10 +357,10 @@ class _StatsTabState extends State<StatsTab> {
             Expanded(
               flex: 2,
               child: Text(
-                formatNumber(efficiency),
+                '$totalKills',
                 style: context.numberStyle.copyWith(
                   fontSize: 12,
-                  color: efficiency < 0 ? tradingRed : tradingGreen,
+                  color: context.colors.mutedForeground,
                 ),
               ),
             ),
@@ -513,14 +507,12 @@ class _AmountMetric extends StatelessWidget {
     required this.rate,
     required this.trend,
     required this.color,
-    this.subtitle,
   });
   final String label;
   final double amount;
   final double rate;
   final List<double> trend;
   final Color color;
-  final String? subtitle;
   @override
   Widget build(BuildContext context) => AppCard(
     padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
@@ -546,16 +538,6 @@ class _AmountMetric extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               AmountView(amount, rate, fontSize: 27, color: color),
-              if (subtitle != null) ...[
-                const SizedBox(height: 5),
-                Text(
-                  subtitle!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.colors.mutedForeground,
-                  ),
-                ),
-              ],
             ],
           ),
         ],
@@ -619,6 +601,124 @@ class _DurationMetric extends StatelessWidget {
       ),
     );
   }
+}
+
+class _KillMetric extends StatelessWidget {
+  const _KillMetric({required this.kills});
+
+  final List<int> kills;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final total = kills.fold<int>(0, (sum, count) => sum + count);
+    const icons = [
+      'monster_normal',
+      'monster_magic',
+      'monster_rare',
+      'monster_unique',
+    ];
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      child: SizedBox(
+        height: 136,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l.monsterKills,
+              style: TextStyle(
+                fontSize: 14,
+                color: context.colors.mutedForeground,
+              ),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              '$total',
+              style: context.numberStyle.copyWith(
+                fontSize: 27,
+                fontWeight: FontWeight.w600,
+                color: brandYellow,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 58,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _KillCount(
+                            icon: icons[0],
+                            count: kills.isNotEmpty ? kills[0] : 0,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _KillCount(
+                            icon: icons[1],
+                            count: kills.length > 1 ? kills[1] : 0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _KillCount(
+                            icon: icons[2],
+                            count: kills.length > 2 ? kills[2] : 0,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _KillCount(
+                            icon: icons[3],
+                            count: kills.length > 3 ? kills[3] : 0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _KillCount extends StatelessWidget {
+  const _KillCount({required this.icon, required this.count});
+
+  final String icon;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      AppIcon(icon, size: 20),
+      const SizedBox(width: 6),
+      Expanded(
+        child: Text(
+          '$count',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.numberStyle.copyWith(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _TrendLine extends StatelessWidget {

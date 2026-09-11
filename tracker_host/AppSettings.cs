@@ -10,6 +10,9 @@ internal sealed class AppSettings
     public bool ClickThrough { get; set; }
     public string OverlayMode { get; set; } = "floating";
     public string OverlayWindowStyle { get; set; } = "frameless";
+    public bool PickupToastsEnabled { get; set; } = true;
+    public int PickupToastMaxVisible { get; set; } = 3;
+    public double PickupToastDurationSeconds { get; set; } = 2.5;
     public string ThemeMode { get; set; } = "dark";
     // Mark newly created settings so older files that predate this flag are normalized once.
     public bool ThemeModeConfigured { get; set; } = true;
@@ -75,6 +78,9 @@ internal sealed class AppSettings
         ClickThrough = value.ClickThrough;
         OverlayMode = value.OverlayMode;
         OverlayWindowStyle = value.OverlayWindowStyle;
+        PickupToastsEnabled = value.PickupToastsEnabled;
+        PickupToastMaxVisible = value.PickupToastMaxVisible;
+        PickupToastDurationSeconds = value.PickupToastDurationSeconds;
         ThemeMode = value.ThemeMode;
         ThemeModeConfigured = value.ThemeModeConfigured;
         Language = value.Language;
@@ -101,6 +107,9 @@ internal sealed class AppSettings
         ClickThrough = value.ClickThrough;
         OverlayMode = value.OverlayMode;
         OverlayWindowStyle = value.OverlayWindowStyle;
+        PickupToastsEnabled = value.PickupToastsEnabled;
+        PickupToastMaxVisible = value.PickupToastMaxVisible;
+        PickupToastDurationSeconds = value.PickupToastDurationSeconds;
         ThemeMode = value.ThemeMode;
         ThemeModeConfigured = value.ThemeModeConfigured;
         RiskAcknowledged = value.RiskAcknowledged;
@@ -165,6 +174,8 @@ internal sealed class AppSettings
         TextOpacity = Math.Clamp(TextOpacity, 0, 1);
         OverlayMode = OverlayMode == "minimal" ? "minimal" : "floating";
         OverlayWindowStyle = OverlayWindowStyle == "normal" ? "normal" : "frameless";
+        PickupToastMaxVisible = Math.Clamp(PickupToastMaxVisible, 1, 10);
+        PickupToastDurationSeconds = Math.Clamp(PickupToastDurationSeconds, 1, 10);
         ThemeMode = ThemeMode is "light" or "dark" or "system" ? ThemeMode : "system";
         CloseAction = CloseAction is "exit" or "overlay" ? CloseAction : string.Empty;
         UpdateSource = UpdateSource is "cdn" or "native" or "custom" ? UpdateSource : "cdn";

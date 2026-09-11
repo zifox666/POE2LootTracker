@@ -13,6 +13,9 @@ class WindowCoordinator {
   final WindowController currentWindow;
   final AppController app;
   WindowController? overlayWindow;
+  WindowController? recentLootWindow;
+  String? lastPresentedPickup;
+  bool? pickupToastsEnabled;
 
   /// How the overlay's own "new session" button starts one, when the shell has wired it up.
   ///
@@ -62,7 +65,7 @@ class WindowCoordinator {
       // The child shows and verifies its own HWND before the main window is put away. In
       // particular this makes reopening a previously hidden overlay reliable: WindowController's
       // fire-and-forget SW_SHOW call alone cannot tell us whether the native window became visible.
-      final ready = await _prepareOverlay(overlay);
+      final ready = await _prepareWindow(overlay, 'overlay');
       if (ready != true) {
         throw StateError(
           'the overlay did not confirm that its window is visible',
@@ -79,22 +82,63 @@ class WindowCoordinator {
   /// A newly created Flutter engine may need a moment to install its Dart method handler. Waiting
   /// here also gives reused windows the same verified show path without hiding the main window on
   /// a failed first call.
-  Future<bool> _prepareOverlay(WindowController overlay) async {
+  Future<bool> _prepareWindow(WindowController window, String label) async {
     for (var attempt = 0; attempt < 20; attempt++) {
       try {
-        final ready = await overlay.invokeMethod<bool>(
+        final ready = await window.invokeMethod<bool>(
           'prepareToShow',
           app.forwardedState(),
         );
         if (ready == true) return true;
       } catch (error) {
         if (attempt == 19) {
-          debugPrint('overlay: prepareToShow failed: $error');
+          debugPrint('$label: prepareToShow failed: $error');
         }
       }
       await Future<void>.delayed(const Duration(milliseconds: 100));
     }
     return false;
+  }
+
+  /// Makes the transparent pickup-toast surface visible without changing the main/overlay window.
+  Future<bool> _showRecentLoot() async {
+    try {
+      var window = recentLootWindow;
+      if (window == null) {
+        window = await WindowController.create(
+          WindowConfiguration(
+            arguments: jsonEncode({
+              'kind': 'recentLoot',
+              'ownerId': currentWindow.windowId,
+            }),
+            hiddenAtLaunch: true,
+          ),
+        );
+        if (window.windowId.isEmpty) {
+          throw StateError('the recent-pickup window was not created');
+        }
+        recentLootWindow = window;
+      }
+      await window.show();
+      if (!await _prepareWindow(window, 'recent loot')) {
+        throw StateError('the recent-pickup window is not visible');
+      }
+      app.setError(null);
+      return true;
+    } catch (exception) {
+      app.setError('recent loot: $exception');
+      return false;
+    }
+  }
+
+  Future<bool> previewRecentLoot() async {
+    if (!await _showRecentLoot()) return false;
+    try {
+      return await recentLootWindow?.invokeMethod<bool>('preview') == true;
+    } catch (exception) {
+      app.setError('recent loot preview: $exception');
+      return false;
+    }
   }
 
   /// Puts the main window away now that the overlay is actually up.
@@ -239,10 +283,40 @@ class WindowCoordinator {
     return null;
   }
 
-  void _forwardState() => unawaited(_sendState());
+  void _forwardState() {
+    unawaited(_sendState());
+    final enabled = app.settings['pickupToastsEnabled'] as bool? ?? true;
+    if (!enabled) {
+      lastPresentedPickup = null;
+      if (pickupToastsEnabled == true) {
+        unawaited(recentLootWindow?.hide());
+      }
+      pickupToastsEnabled = false;
+      return;
+    }
+    final pickup = app.snapshot.recentPickups.isEmpty
+        ? null
+        : app.snapshot.recentPickups.first;
+    final signature = pickup == null
+        ? null
+        : '${pickup.key}|${pickup.count}|${pickup.pickedUpUtc}';
+    if (pickupToastsEnabled != true) {
+      pickupToastsEnabled = true;
+      lastPresentedPickup = signature;
+      return;
+    }
+    if (signature == null) return;
+    if (signature == lastPresentedPickup) return;
+    lastPresentedPickup = signature;
+    unawaited(_showRecentLoot());
+  }
+
   Future<void> _sendState() async {
     try {
       await overlayWindow?.invokeMethod('state', app.forwardedState());
+    } catch (_) {}
+    try {
+      await recentLootWindow?.invokeMethod('state', app.forwardedState());
     } catch (_) {}
   }
 

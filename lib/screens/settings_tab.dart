@@ -14,11 +14,13 @@ class SettingsTab extends StatelessWidget {
   const SettingsTab({
     required this.controller,
     required this.onShowOverlay,
+    required this.onShowRecentLoot,
     required this.onNewSession,
     super.key,
   });
   final AppController controller;
   final VoidCallback onShowOverlay;
+  final VoidCallback onShowRecentLoot;
   final VoidCallback onNewSession;
 
   @override
@@ -95,6 +97,34 @@ class SettingsTab extends StatelessWidget {
             settings['clickThrough'] as bool? ?? false,
             (value) => controller.updateSettings({'clickThrough': value}),
           ),
+          _toggle(
+            context,
+            l.pickupNotifications,
+            settings['pickupToastsEnabled'] as bool? ?? true,
+            (value) =>
+                controller.updateSettings({'pickupToastsEnabled': value}),
+          ),
+          _choice(
+            context,
+            l.maxVisiblePickups,
+            '${settings['pickupToastMaxVisible'] ?? 3}',
+            {for (var value = 1; value <= 10; value++) '$value': '$value'},
+            (value) => controller.updateSettings({
+              'pickupToastMaxVisible': int.parse(value),
+            }),
+          ),
+          _choice(
+            context,
+            l.pickupDisplayDuration,
+            '${settings['pickupToastDurationSeconds'] ?? 2.5}',
+            {
+              for (final value in [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10])
+                '$value': '$value ${l.seconds}',
+            },
+            (value) => controller.updateSettings({
+              'pickupToastDurationSeconds': double.parse(value),
+            }),
+          ),
           _slider(
             context,
             l.textOpacity,
@@ -109,11 +139,23 @@ class SettingsTab extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.centerLeft,
-            child: FButton(
-              onPress: onShowOverlay,
-              mainAxisSize: MainAxisSize.min,
-              prefix: const AppSvg('overlay', color: Color(0xFF181A20)),
-              child: Text(l.showOverlay),
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                FButton(
+                  onPress: onShowOverlay,
+                  mainAxisSize: MainAxisSize.min,
+                  prefix: const AppSvg('overlay', color: Color(0xFF181A20)),
+                  child: Text(l.showOverlay),
+                ),
+                FButton(
+                  onPress: onShowRecentLoot,
+                  mainAxisSize: MainAxisSize.min,
+                  prefix: const AppSvg('loot', color: Color(0xFF181A20)),
+                  child: Text(l.previewPickupNotifications),
+                ),
+              ],
             ),
           ),
         ]),

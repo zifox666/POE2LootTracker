@@ -35,6 +35,7 @@ internal sealed class LootTrackerEngine : IDisposable
     private readonly Dictionary<string, string> itemBaseNames = new(StringComparer.Ordinal);
     private readonly Dictionary<string, double> manualPricesEx = new(StringComparer.Ordinal);
     private readonly List<MapRun> runs = new();
+    private readonly List<RecentPickup> recentPickups = new();
     private readonly Dictionary<uint, MonsterTally> monsterTallies = new();
     private readonly string leagueCachePath = Path.Combine(AppSettings.CacheDirectory, "leagues.json");
 
@@ -49,6 +50,7 @@ internal sealed class LootTrackerEngine : IDisposable
     private DateTime nextLeagueRefreshCheckUtc;
     private MapRun? current;
     private Dictionary<string, long>? baseline;
+    private Dictionary<string, long>? previousInventory;
     private Dictionary<string, long> liveLegDelta = new(StringComparer.Ordinal);
     private string lastZoneHash = string.Empty;
     private bool baselinePending;
@@ -159,6 +161,7 @@ internal sealed class LootTrackerEngine : IDisposable
         bool connected = Core.Process.Pid != 0;
         var currentGained = this.CurrentGainedLive();
         var currentLoot = this.BuildLoot(currentGained, this.current);
+        var recentPickups = this.recentPickups.Select(this.BuildRecentPickup).ToList();
         double currentProfit = this.current == null ? 0 : this.NetValue(this.current, currentGained);
         double totalProfit = 0;
         var totalTime = TimeSpan.Zero;
@@ -219,6 +222,7 @@ internal sealed class LootTrackerEngine : IDisposable
             this.runs.Count,
             this.current == null ? new int[4] : (int[])this.current.Kills.Clone(),
             currentLoot,
+            recentPickups,
             mapSummaries,
             this.priceCache.LastSyncUtc,
             this.priceCache.Status,
@@ -239,8 +243,10 @@ internal sealed class LootTrackerEngine : IDisposable
         this.current = null;
         this.runStartUtc = null;
         this.baseline = null;
+        this.previousInventory = null;
         this.baselinePending = false;
         this.liveLegDelta.Clear();
+        this.recentPickups.Clear();
         this.monsterTallies.Clear();
         this.lastZoneHash = string.Empty;
         this.sessionStartUtc = DateTime.UtcNow;
@@ -455,6 +461,7 @@ internal sealed class LootTrackerEngine : IDisposable
         if (this.baselinePending && this.TrySnapshotInventory(out var snapshot))
         {
             this.baseline = snapshot;
+            this.previousInventory = new Dictionary<string, long>(snapshot, StringComparer.Ordinal);
             this.baselinePending = false;
             this.liveLegDelta.Clear();
         }
@@ -477,6 +484,7 @@ internal sealed class LootTrackerEngine : IDisposable
             this.BankActiveTime(now);
             if (wasOnMap && this.current != null && this.baseline != null && this.TrySnapshotInventory(out var outgoing))
             {
+                this.ObserveRecentPickups(outgoing, now);
                 MergeInto(this.current.Gained, Diff(outgoing, this.baseline));
             }
 
@@ -507,6 +515,7 @@ internal sealed class LootTrackerEngine : IDisposable
 
             this.runStartUtc = now;
             this.baseline = null;
+            this.previousInventory = null;
             this.baselinePending = true;
             this.liveLegDelta.Clear();
             this.monsterTallies.Clear();
@@ -516,10 +525,12 @@ internal sealed class LootTrackerEngine : IDisposable
             this.BankActiveTime(now);
             if (this.baseline != null && this.TrySnapshotInventory(out var snapshot))
             {
+                this.ObserveRecentPickups(snapshot, now);
                 MergeInto(this.current.Gained, Diff(snapshot, this.baseline));
             }
 
             this.baseline = null;
+            this.previousInventory = null;
             this.baselinePending = false;
             this.liveLegDelta.Clear();
             this.current.EndedUtc = now;
@@ -546,6 +557,7 @@ internal sealed class LootTrackerEngine : IDisposable
         this.nextInventoryReadUtc = now.AddMilliseconds(500);
         if (this.TrySnapshotInventory(out var snapshot))
         {
+            this.ObserveRecentPickups(snapshot, now);
             this.liveLegDelta = Diff(snapshot, this.baseline);
         }
     }
@@ -714,6 +726,45 @@ internal sealed class LootTrackerEngine : IDisposable
         }
 
         return result.OrderByDescending(line => Math.Abs(line.TotalEx)).ThenBy(line => line.Name, StringComparer.Ordinal).ToList();
+    }
+
+    private RecentPickupLine BuildRecentPickup(RecentPickup pickup)
+    {
+        bool priced = this.TryPriceItem(pickup.Key, out double unit, out string label);
+        return new RecentPickupLine(
+            pickup.Key,
+            label,
+            pickup.Count,
+            unit,
+            priced ? unit * pickup.Count : 0,
+            priced,
+            this.ResolveIconUrl(pickup.Key),
+            pickup.PickedUpUtc);
+    }
+
+    private void ObserveRecentPickups(Dictionary<string, long> snapshot, DateTime now)
+    {
+        if (this.previousInventory != null)
+        {
+            AppendRecentPickups(this.recentPickups, Diff(snapshot, this.previousInventory), now);
+        }
+        this.previousInventory = new Dictionary<string, long>(snapshot, StringComparer.Ordinal);
+    }
+
+    internal static void AppendRecentPickups(
+        List<RecentPickup> target,
+        IReadOnlyDictionary<string, long> change,
+        DateTime pickedUpUtc,
+        int limit = 50)
+    {
+        foreach (var entry in change.Where(entry => entry.Value > 0).Reverse())
+        {
+            target.Insert(0, new RecentPickup(entry.Key, entry.Value, pickedUpUtc));
+        }
+        if (target.Count > limit)
+        {
+            target.RemoveRange(limit, target.Count - limit);
+        }
     }
 
     private double ValueOf(Dictionary<string, long> gained)
@@ -1520,6 +1571,8 @@ internal sealed class LootTrackerEngine : IDisposable
         public bool SeenAlive { get; set; } = seenAlive;
         public bool Tallied { get; set; }
     }
+
+    internal sealed record RecentPickup(string Key, long Count, DateTime PickedUpUtc);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr OpenProcess(uint access, bool inheritHandle, int processId);

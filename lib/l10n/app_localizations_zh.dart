@@ -162,6 +162,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get efficiency => '效率';
 
   @override
+  String get monsterKills => '怪物击杀';
+
+  @override
+  String get totalKills => '总击杀';
+
+  @override
   String get averageMapTime => '平均每图时长';
 
   @override
@@ -202,6 +208,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pickups => '拾取';
+
+  @override
+  String get pickupNotifications => '拾取通知';
+
+  @override
+  String get maxVisiblePickups => '最多显示条数';
+
+  @override
+  String get pickupDisplayDuration => '显示时长';
+
+  @override
+  String get seconds => '秒';
 
   @override
   String get costs => '消耗';
@@ -366,6 +384,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get showOverlay => '显示小窗';
+
+  @override
+  String get previewPickupNotifications => '预览拾取通知';
 
   @override
   String get showMain => '显示主界面';

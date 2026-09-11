@@ -55,12 +55,18 @@ public sealed class ProtocolTests
             RiskAcknowledged = true,
             UpdateSource = "custom",
             CustomUpdateCdn = "https://mirror.example/",
+            PickupToastsEnabled = true,
+            PickupToastMaxVisible = 99,
+            PickupToastDurationSeconds = 0.25,
         };
 
         Assert.False(HostServer.RequiresEngineGate(current, incoming));
         current.ApplyUiOnly(incoming);
         Assert.Equal("custom", current.UpdateSource);
         Assert.Equal("https://mirror.example/", current.CustomUpdateCdn);
+        Assert.True(current.PickupToastsEnabled);
+        Assert.Equal(10, current.PickupToastMaxVisible);
+        Assert.Equal(1, current.PickupToastDurationSeconds);
 
         incoming.Language = "zh";
         Assert.True(HostServer.RequiresEngineGate(current, incoming));

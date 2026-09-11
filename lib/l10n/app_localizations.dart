@@ -392,6 +392,18 @@ abstract class AppLocalizations {
   /// **'Efficiency'**
   String get efficiency;
 
+  /// No description provided for @monsterKills.
+  ///
+  /// In en, this message translates to:
+  /// **'Monster kills'**
+  String get monsterKills;
+
+  /// No description provided for @totalKills.
+  ///
+  /// In en, this message translates to:
+  /// **'Total kills'**
+  String get totalKills;
+
   /// No description provided for @averageMapTime.
   ///
   /// In en, this message translates to:
@@ -475,6 +487,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pickups'**
   String get pickups;
+
+  /// No description provided for @pickupNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup notifications'**
+  String get pickupNotifications;
+
+  /// No description provided for @maxVisiblePickups.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum visible pickups'**
+  String get maxVisiblePickups;
+
+  /// No description provided for @pickupDisplayDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Display duration'**
+  String get pickupDisplayDuration;
+
+  /// No description provided for @seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'seconds'**
+  String get seconds;
 
   /// No description provided for @costs.
   ///
@@ -799,6 +835,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show overlay'**
   String get showOverlay;
+
+  /// No description provided for @previewPickupNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview pickup notifications'**
+  String get previewPickupNotifications;
 
   /// No description provided for @showMain.
   ///

@@ -27,6 +27,33 @@ class LootEntry {
   );
 }
 
+class RecentPickupEntry extends LootEntry {
+  const RecentPickupEntry({
+    required super.key,
+    required super.name,
+    required super.count,
+    required super.unitEx,
+    required super.totalEx,
+    required super.priced,
+    required super.iconUrl,
+    required this.pickedUpUtc,
+  });
+
+  final DateTime? pickedUpUtc;
+
+  factory RecentPickupEntry.fromJson(Map<String, dynamic> json) =>
+      RecentPickupEntry(
+        key: json['key'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        count: (json['count'] as num?)?.toInt() ?? 0,
+        unitEx: (json['unitEx'] as num?)?.toDouble() ?? 0,
+        totalEx: (json['totalEx'] as num?)?.toDouble() ?? 0,
+        priced: json['priced'] as bool? ?? false,
+        iconUrl: json['iconUrl'] as String? ?? '',
+        pickedUpUtc: DateTime.tryParse(json['pickedUpUtc'] as String? ?? ''),
+      );
+}
+
 class MapSummary {
   const MapSummary({
     required this.id,
@@ -91,6 +118,7 @@ class TrackerSnapshot {
     required this.mapCount,
     required this.kills,
     required this.loot,
+    required this.recentPickups,
     required this.maps,
     required this.priceUpdatedUtc,
     required this.priceStatus,
@@ -123,6 +151,7 @@ class TrackerSnapshot {
   final int mapCount;
   final List<int> kills;
   final List<LootEntry> loot;
+  final List<RecentPickupEntry> recentPickups;
   final List<MapSummary> maps;
   final DateTime? priceUpdatedUtc;
   final String priceStatus;
@@ -161,6 +190,9 @@ class TrackerSnapshot {
         mapCount: (json['mapCount'] as num?)?.toInt() ?? 0,
         kills: intList(json['kills']),
         loot: listOfMaps(json['loot']).map(LootEntry.fromJson).toList(),
+        recentPickups: listOfMaps(
+          json['recentPickups'],
+        ).map(RecentPickupEntry.fromJson).toList(),
         maps: listOfMaps(json['maps']).map(MapSummary.fromJson).toList(),
         priceUpdatedUtc: DateTime.tryParse(
           json['priceUpdatedUtc'] as String? ?? '',
@@ -191,6 +223,7 @@ class TrackerSnapshot {
     mapCount: 0,
     kills: [0, 0, 0, 0],
     loot: [],
+    recentPickups: [],
     maps: [],
     priceUpdatedUtc: null,
     priceStatus: 'idle',

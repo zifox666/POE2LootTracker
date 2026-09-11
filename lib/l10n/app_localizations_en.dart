@@ -166,6 +166,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get efficiency => 'Efficiency';
 
   @override
+  String get monsterKills => 'Monster kills';
+
+  @override
+  String get totalKills => 'Total kills';
+
+  @override
   String get averageMapTime => 'Average map time';
 
   @override
@@ -206,6 +212,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pickups => 'Pickups';
+
+  @override
+  String get pickupNotifications => 'Pickup notifications';
+
+  @override
+  String get maxVisiblePickups => 'Maximum visible pickups';
+
+  @override
+  String get pickupDisplayDuration => 'Display duration';
+
+  @override
+  String get seconds => 'seconds';
 
   @override
   String get costs => 'Costs';
@@ -372,6 +390,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showOverlay => 'Show overlay';
+
+  @override
+  String get previewPickupNotifications => 'Preview pickup notifications';
 
   @override
   String get showMain => 'Show main window';

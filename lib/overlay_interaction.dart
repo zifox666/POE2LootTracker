@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 /// Windows-side interaction support for the click-through overlay.
 ///
 /// A fully transparent window cannot receive the hover that reveals its controls. The native
-/// runner therefore keeps the window transparent everywhere except a small top-right hot zone.
-/// That zone works in both overlay layouts because it is anchored to the current client width.
+/// runner therefore keeps the window transparent everywhere except a small controls hot zone.
 class OverlayInteraction {
   const OverlayInteraction();
 
@@ -17,14 +16,19 @@ class OverlayInteraction {
   static const double controlsWidth = 206;
   static const double controlsHeight = 38;
 
-  Future<void> setClickThrough(bool enabled) =>
-      _channel.invokeMethod<void>('setClickThrough', <String, dynamic>{
-        'enabled': enabled,
-        'top': controlsTop,
-        'right': controlsRight,
-        'width': controlsWidth,
-        'height': controlsHeight,
-      });
+  Future<void> setClickThrough(
+    bool enabled, {
+    double top = controlsTop,
+    double right = controlsRight,
+    double width = controlsWidth,
+    double height = controlsHeight,
+  }) => _channel.invokeMethod<void>('setClickThrough', <String, dynamic>{
+    'enabled': enabled,
+    'top': top,
+    'right': right,
+    'width': width,
+    'height': height,
+  });
 
   /// Changes the native z-order without activating the overlay.
   Future<void> setAlwaysOnTop(bool enabled) =>

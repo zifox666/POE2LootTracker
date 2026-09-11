@@ -16,12 +16,14 @@ class MainShell extends StatefulWidget {
   const MainShell({
     required this.controller,
     required this.onShowOverlay,
+    required this.onShowRecentLoot,
     required this.onNewSession,
     required this.onCloseWindow,
     super.key,
   });
   final AppController controller;
   final VoidCallback onShowOverlay;
+  final VoidCallback onShowRecentLoot;
 
   /// Both of these go through the shell rather than straight to the controller, because each one
   /// asks for confirmation first (and that dialog needs a build context).
@@ -43,6 +45,7 @@ class _MainShellState extends State<MainShell> {
       SettingsTab(
         controller: widget.controller,
         onShowOverlay: widget.onShowOverlay,
+        onShowRecentLoot: widget.onShowRecentLoot,
         onNewSession: widget.onNewSession,
       ),
     ];
@@ -59,6 +62,7 @@ class _MainShellState extends State<MainShell> {
           _TitleBar(
             controller: widget.controller,
             onShowOverlay: widget.onShowOverlay,
+            onShowRecentLoot: widget.onShowRecentLoot,
             onNewSession: widget.onNewSession,
             onCloseWindow: widget.onCloseWindow,
           ),
@@ -90,6 +94,11 @@ class _MainShellState extends State<MainShell> {
                         label: l.showOverlay,
                         onTap: widget.onShowOverlay,
                       ),
+                      _MiniWindowAction(
+                        label: l.previewPickupNotifications,
+                        icon: 'loot',
+                        onTap: widget.onShowRecentLoot,
+                      ),
                     ],
                   ),
                 ),
@@ -109,11 +118,13 @@ class _TitleBar extends StatelessWidget {
   const _TitleBar({
     required this.controller,
     required this.onShowOverlay,
+    required this.onShowRecentLoot,
     required this.onNewSession,
     required this.onCloseWindow,
   });
   final AppController controller;
   final VoidCallback onShowOverlay;
+  final VoidCallback onShowRecentLoot;
   final VoidCallback onNewSession;
   final VoidCallback onCloseWindow;
   @override
@@ -200,6 +211,7 @@ class _TitleBar extends StatelessWidget {
             ),
             _TitleAction(icon: 'plus', onTap: onNewSession),
             _TitleAction(icon: 'overlay', onTap: onShowOverlay),
+            _TitleAction(icon: 'loot', onTap: onShowRecentLoot),
             _TitleAction(icon: 'minimize', onTap: windowManager.minimize),
             _TitleAction(icon: 'close', onTap: onCloseWindow),
           ],
@@ -413,9 +425,14 @@ class _ErrorBanner extends StatelessWidget {
 }
 
 class _MiniWindowAction extends StatelessWidget {
-  const _MiniWindowAction({required this.label, required this.onTap});
+  const _MiniWindowAction({
+    required this.label,
+    required this.onTap,
+    this.icon = 'overlay',
+  });
   final String label;
   final VoidCallback onTap;
+  final String icon;
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -432,7 +449,7 @@ class _MiniWindowAction extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const AppSvg('overlay', size: 18),
+            AppSvg(icon, size: 18),
             const SizedBox(width: 12),
             Expanded(
               child: Text(

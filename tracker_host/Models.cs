@@ -37,6 +37,16 @@ internal sealed class CostPreset
 
 internal sealed record LootLine(string Key, string Name, long Count, double UnitEx, double TotalEx, bool Priced, string IconUrl);
 
+internal sealed record RecentPickupLine(
+    string Key,
+    string Name,
+    long Count,
+    double UnitEx,
+    double TotalEx,
+    bool Priced,
+    string IconUrl,
+    DateTime PickedUpUtc);
+
 internal sealed record MapSummary(
     string Id,
     string Name,
@@ -73,6 +83,7 @@ internal sealed record TrackerSnapshot(
     int MapCount,
     int[] Kills,
     IReadOnlyList<LootLine> Loot,
+    IReadOnlyList<RecentPickupLine> RecentPickups,
     IReadOnlyList<MapSummary> Maps,
     DateTime PriceUpdatedUtc,
     PriceSyncStatus PriceStatus,

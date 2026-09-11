@@ -111,6 +111,11 @@ class WindowsRuntime with TrayListener, WindowListener {
             label: l.showOverlay,
             onClick: (_) => unawaited(windows.showOverlay()),
           ),
+          MenuItem(
+            key: 'recentLoot',
+            label: l.previewPickupNotifications,
+            onClick: (_) => unawaited(windows.previewRecentLoot()),
+          ),
           MenuItem.separator(),
           MenuItem(
             key: 'pause',

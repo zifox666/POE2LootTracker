@@ -33,6 +33,7 @@ void main() {
         home: MainShell(
           controller: controller,
           onShowOverlay: () {},
+          onShowRecentLoot: () {},
           onNewSession: () {},
           onCloseWindow: () {},
         ),
@@ -89,12 +90,19 @@ void main() {
           body: SettingsTab(
             controller: controller,
             onShowOverlay: () {},
+            onShowRecentLoot: () {},
             onNewSession: () {},
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
+
+    expect(find.text('拾取通知'), findsOneWidget);
+    expect(find.text('最多显示条数'), findsOneWidget);
+    expect(find.text('显示时长'), findsOneWidget);
+    expect(find.text('预览拾取通知'), findsOneWidget);
+
     await tester.drag(find.byType(ListView), const Offset(0, -1000));
     await tester.pumpAndSettle();
 
