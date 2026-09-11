@@ -14,7 +14,7 @@ class OverlayInteraction {
 
   static const double controlsTop = 0;
   static const double controlsRight = 0;
-  static const double controlsWidth = 178;
+  static const double controlsWidth = 206;
   static const double controlsHeight = 38;
 
   Future<void> setClickThrough(bool enabled) =>

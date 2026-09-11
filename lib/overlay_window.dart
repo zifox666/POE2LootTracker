@@ -1014,6 +1014,12 @@ class _OverlayControls extends StatelessWidget {
           _control('maximize', () => _invokeOwnerSafely(owner, 'showMain')),
           _control('overlay', _toggleMode),
           _control('settings', () => _showQuickSettings(context)),
+          _control(
+            'mouse',
+            _toggleClickThrough,
+            key: const ValueKey('toggle-click-through'),
+            color: app.settings['clickThrough'] == true ? brandYellow : null,
+          ),
           // Session controls. These cannot call AppController directly: this engine's controller runs
           // with startHost: false and has no tracker host of its own, so the owner engine -- which
           // does -- performs the action and pushes the resulting state back.
@@ -1032,31 +1038,43 @@ class _OverlayControls extends StatelessWidget {
     );
   }
 
-  Widget _control(String icon, VoidCallback callback, {Color? color}) =>
-      InkWell(
-        onTap: callback,
-        child: SizedBox.square(
-          dimension: 28,
-          child: Center(child: AppSvg(icon, size: 15, color: color)),
-        ),
-      );
+  Widget _control(
+    String icon,
+    VoidCallback callback, {
+    Key? key,
+    Color? color,
+  }) => InkWell(
+    key: key,
+    onTap: callback,
+    child: SizedBox.square(
+      dimension: 28,
+      child: Center(child: AppSvg(icon, size: 15, color: color)),
+    ),
+  );
 
   void _toggleMode() {
     final previous = app.settings['overlayMode']?.toString() ?? 'floating';
     final next = nextOverlayMode(previous);
+    _updateSettings({'overlayMode': next});
+  }
 
-    // Rebuild and resize this window immediately. Waiting for the owner to push state back over a
-    // second channel invocation is unnecessary and was the reason the button appeared inert even
-    // though the setting had already been saved successfully.
+  void _toggleClickThrough() {
+    final enabled = app.settings['clickThrough'] as bool? ?? false;
+    _updateSettings({'clickThrough': !enabled});
+  }
+
+  void _updateSettings(Map<String, dynamic> changes) {
+    // Apply the click immediately. Waiting for the owner to push state back over a second channel
+    // invocation made the controls appear inert even when the setting had been saved successfully.
     app.applyForwardedState({
-      'settings': <String, dynamic>{...app.settings, 'overlayMode': next},
+      'settings': <String, dynamic>{...app.settings, ...changes},
     });
 
     unawaited(() async {
       try {
         final state = await owner.invokeMethod<dynamic>(
           'updateOverlaySettings',
-          {'overlayMode': next},
+          changes,
         );
         if (state is Map) {
           app.applyForwardedState(state.cast<String, dynamic>());

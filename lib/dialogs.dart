@@ -47,6 +47,87 @@ Future<bool> confirmUpdateAvailable(
       false;
 }
 
+/// Keeps update progress visible after the startup prompt starts the download.
+Future<void> showUpdateProgress(
+  BuildContext context, {
+  required AppController controller,
+}) => showDialog<void>(
+  context: context,
+  barrierDismissible: false,
+  builder: (_) => _UpdateProgressDialog(controller: controller),
+);
+
+class _UpdateProgressDialog extends StatefulWidget {
+  const _UpdateProgressDialog({required this.controller});
+
+  final AppController controller;
+
+  @override
+  State<_UpdateProgressDialog> createState() => _UpdateProgressDialogState();
+}
+
+class _UpdateProgressDialogState extends State<_UpdateProgressDialog> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(widget.controller.installAvailableUpdate());
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) {
+      final l = AppLocalizations.of(context);
+      final phase = widget.controller.updatePhase;
+      final percent = widget.controller.updateDownloadPercent;
+      final failed = phase == UpdatePhase.failed;
+      final status = switch (phase) {
+        UpdatePhase.downloading => l.downloadingUpdate(percent),
+        UpdatePhase.installing => l.installingUpdate,
+        UpdatePhase.failed => l.updateCheckFailed(
+          widget.controller.updateError ?? '',
+        ),
+        _ => l.downloadingUpdate(percent),
+      };
+      return PopScope(
+        canPop: failed,
+        child: AlertDialog(
+          backgroundColor: context.colors.card,
+          title: Text(l.updateDialogTitle),
+          content: SizedBox(
+            width: 360,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(status),
+                if (!failed) ...[
+                  const SizedBox(height: 16),
+                  LinearProgressIndicator(
+                    value: phase == UpdatePhase.downloading && percent > 0
+                        ? percent / 100
+                        : null,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: failed
+              ? [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      MaterialLocalizations.of(context).closeButtonLabel,
+                    ),
+                  ),
+                ]
+              : null,
+        ),
+      );
+    },
+  );
+}
+
 class _UsageWarningDialog extends StatefulWidget {
   const _UsageWarningDialog({required this.seconds});
 

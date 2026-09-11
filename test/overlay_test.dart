@@ -104,6 +104,13 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const ValueKey('overlay-controls')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('toggle-click-through')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('toggle-click-through')));
+      await tester.pump();
+      expect(controller.settings['clickThrough'], isFalse);
       await mouse.removePointer();
       controller.dispose();
     });

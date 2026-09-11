@@ -277,7 +277,9 @@ class _DesktopShellState extends State<_DesktopShell> {
       context,
       version: release.version,
     );
-    if (install && mounted) await widget.controller.installAvailableUpdate();
+    if (install && mounted) {
+      await showUpdateProgress(context, controller: widget.controller);
+    }
   }
 
   /// Asks whether to keep adding to the session the host restored, or start a new one.
