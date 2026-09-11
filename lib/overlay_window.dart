@@ -9,6 +9,7 @@ import 'app_controller.dart';
 import 'app_theme.dart';
 import 'dialogs.dart';
 import 'l10n/app_localizations.dart';
+import 'overlay_interaction.dart';
 import 'widgets/common.dart';
 
 Future<void> configureOverlayWindow() async {
@@ -69,6 +70,8 @@ class _OverlayApplicationState extends State<OverlayApplication>
   Timer? saveTimer;
   bool restored = false;
   int restoreRequest = 0;
+  bool? appliedClickThrough;
+  static const interaction = OverlayInteraction();
 
   @override
   void initState() {
@@ -76,10 +79,14 @@ class _OverlayApplicationState extends State<OverlayApplication>
     app.addListener(_changed);
     windowManager.addListener(this);
     widget.currentWindow.setWindowMethodHandler((call) async {
-      if (call.method == 'state' && call.arguments is Map) {
+      if ((call.method == 'state' || call.method == 'prepareToShow') &&
+          call.arguments is Map) {
         app.applyForwardedState(
           (call.arguments as Map).cast<String, dynamic>(),
         );
+      }
+      if (call.method == 'prepareToShow') {
+        return interaction.ensureVisible();
       }
       return true;
     });
@@ -134,14 +141,11 @@ class _OverlayApplicationState extends State<OverlayApplication>
         ),
       ),
     );
-    unawaited(
-      _windowOption(
-        () => windowManager.setIgnoreMouseEvents(
-          settings['clickThrough'] as bool? ?? false,
-          forward: true,
-        ),
-      ),
-    );
+    final clickThrough = settings['clickThrough'] as bool? ?? false;
+    if (clickThrough != appliedClickThrough) {
+      appliedClickThrough = clickThrough;
+      unawaited(_windowOption(() => interaction.setClickThrough(clickThrough)));
+    }
     setState(() {});
   }
 
@@ -343,7 +347,11 @@ class _OverlaySurfaceState extends State<OverlaySurface> {
               Positioned(
                 top: 5,
                 right: 5,
-                child: _OverlayControls(app: widget.app, owner: widget.owner),
+                child: _OverlayControls(
+                  key: const ValueKey('overlay-controls'),
+                  app: widget.app,
+                  owner: widget.owner,
+                ),
               ),
           ],
         ),
@@ -986,7 +994,7 @@ class _InlineLabel extends StatelessWidget {
 }
 
 class _OverlayControls extends StatelessWidget {
-  const _OverlayControls({required this.app, required this.owner});
+  const _OverlayControls({required this.app, required this.owner, super.key});
   final AppController app;
   final WindowController owner;
   @override

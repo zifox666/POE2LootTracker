@@ -59,13 +59,42 @@ class WindowCoordinator {
         overlayWindow = overlay;
       }
       await overlay.show();
-      await _sendState();
+      // The child shows and verifies its own HWND before the main window is put away. In
+      // particular this makes reopening a previously hidden overlay reliable: WindowController's
+      // fire-and-forget SW_SHOW call alone cannot tell us whether the native window became visible.
+      final ready = await _prepareOverlay(overlay);
+      if (ready != true) {
+        throw StateError(
+          'the overlay did not confirm that its window is visible',
+        );
+      }
       await _hideMainWindow();
       return true;
     } catch (exception) {
       app.setError('overlay: $exception');
       return false;
     }
+  }
+
+  /// A newly created Flutter engine may need a moment to install its Dart method handler. Waiting
+  /// here also gives reused windows the same verified show path without hiding the main window on
+  /// a failed first call.
+  Future<bool> _prepareOverlay(WindowController overlay) async {
+    for (var attempt = 0; attempt < 20; attempt++) {
+      try {
+        final ready = await overlay.invokeMethod<bool>(
+          'prepareToShow',
+          app.forwardedState(),
+        );
+        if (ready == true) return true;
+      } catch (error) {
+        if (attempt == 19) {
+          debugPrint('overlay: prepareToShow failed: $error');
+        }
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    return false;
   }
 
   /// Puts the main window away now that the overlay is actually up.
