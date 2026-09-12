@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # build and upload one by hand. The build number after `+` is local build identity only; it is not
 # part of the tag, because a tag that moved underneath a published artifact would invalidate the
 # updater's SHA-256 check.
-version: 1.0.10+11
+version: 1.0.11+12
 environment:
   sdk: ^3.11.1
 

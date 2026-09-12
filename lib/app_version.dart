@@ -5,16 +5,16 @@
 // file disagrees with pubspec.yaml.
 
 /// The semantic version, `1.2.3`. Release tags and update comparisons use exactly this.
-const String appVersion = '1.0.10';
+const String appVersion = '1.0.11';
 
 /// The pubspec build number, `45`.
-const String appBuildNumber = '11';
+const String appBuildNumber = '12';
 
 /// The full pubspec form, `1.2.3+45`, for display and diagnostics.
-const String appVersionFull = '1.0.10+11';
+const String appVersionFull = '1.0.11+12';
 
 /// The git tag a release of this version must carry, `v1.2.3`.
-const String appVersionTag = 'v1.0.10';
+const String appVersionTag = 'v1.0.11';
 
 /// [appVersion] split into comparable numbers.
-const List<int> appVersionParts = <int>[1, 0, 10];
+const List<int> appVersionParts = <int>[1, 0, 11];
