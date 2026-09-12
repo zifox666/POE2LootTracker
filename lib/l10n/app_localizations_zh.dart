@@ -129,6 +129,51 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings => '设置';
 
   @override
+  String get searchSettings => '搜索设置';
+
+  @override
+  String get settingsSearchResults => '搜索结果';
+
+  @override
+  String get noSettingsFound => '没有匹配的设置';
+
+  @override
+  String get generalSettings => '常规';
+
+  @override
+  String get overlaySettings => '小窗';
+
+  @override
+  String get notificationSettings => '拾取通知';
+
+  @override
+  String get trackingSettings => '追踪';
+
+  @override
+  String get dataSettings => '数据';
+
+  @override
+  String get updateSettings => '更新';
+
+  @override
+  String get advancedSettings => '高级';
+
+  @override
+  String get gameSettings => '游戏与价格';
+
+  @override
+  String get applicationBehavior => '程序行为';
+
+  @override
+  String get windowBehavior => '窗口行为';
+
+  @override
+  String get appearanceSettings => '视觉效果';
+
+  @override
+  String get typographySettings => '字号';
+
+  @override
   String get currentSession => '当前会话';
 
   @override
@@ -333,7 +378,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backgroundOpacity => '背景透明度';
 
   @override
-  String get frostedGlass => '毛玻璃效果';
+  String get frostedGlass => '毛玻璃（实验功能）';
+
+  @override
+  String get frostedGlassGlow => '泛光程度';
+
+  @override
+  String get frostedGlassOpacity => '毛玻璃背景透明度';
+
+  @override
+  String get frostedGlassBlur => '模糊程度';
+
+  @override
+  String get databaseManagement => '数据库';
+
+  @override
+  String get resetDatabase => '重置数据库';
+
+  @override
+  String get resetDatabaseHint => '删除数据库中的全部追踪记录、设置和行情缓存，然后重新启动程序。';
+
+  @override
+  String get resetDatabaseTitle => '重置数据库？';
+
+  @override
+  String get resetDatabaseBody => '这会永久删除数据库中的全部追踪记录、设置和行情缓存，然后重新启动程序。此操作无法撤销。';
+
+  @override
+  String get databaseCorruptedTitle => '数据库已损坏';
+
+  @override
+  String get databaseCorruptedBody =>
+      '数据库损坏，追踪服务无法启动。是否删除整个数据库并重新启动程序？全部追踪记录和设置都会永久丢失。';
+
+  @override
+  String get deleteDatabaseAndRestart => '删除并重启';
 
   @override
   String get transparentOverlayBorder => '小窗透明边框';

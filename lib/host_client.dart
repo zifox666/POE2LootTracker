@@ -11,8 +11,11 @@ class HostClient {
   final _pending = <String, Completer<dynamic>>{};
   int _nextId = 1;
   bool _disposed = false;
+  String? _lastError;
 
   Stream<Map<String, dynamic>> get events => _events.stream;
+  bool get isRunning => _process != null;
+  String? get lastError => _lastError;
 
   /// Spawns the tracker host if it is not running. Callers that arrive while a spawn is already in
   /// flight share that attempt instead of starting a second process.
@@ -27,6 +30,7 @@ class HostClient {
 
   Future<void> _start() async {
     try {
+      _lastError = null;
       final executable = _findExecutable();
       final process = await Process.start(
         executable,
@@ -146,6 +150,9 @@ class HostClient {
           );
         }
       } else {
+        if (type == 'hostError' && payload is Map) {
+          _lastError = payload['message']?.toString();
+        }
         _events.add({'type': type, 'payload': payload});
       }
     } catch (_) {

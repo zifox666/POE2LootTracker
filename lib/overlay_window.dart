@@ -346,11 +346,21 @@ class _OverlaySurfaceState extends State<OverlaySurface> {
     final backgroundOpacity =
         ((settings['backgroundOpacity'] as num?)?.toDouble().clamp(0, 1) ?? .94)
             .toDouble();
+    final frostedGlassGlow =
+        ((settings['frostedGlassGlow'] as num?)?.toDouble().clamp(0, 1) ?? .5)
+            .toDouble();
+    final frostedGlassOpacity =
+        ((settings['frostedGlassOpacity'] as num?)?.toDouble().clamp(0, 1) ??
+                .7)
+            .toDouble();
+    final frostedGlassBlur =
+        ((settings['frostedGlassBlur'] as num?)?.toDouble().clamp(0, 1) ?? .65)
+            .toDouble();
     final textOpacity =
         ((settings['textOpacity'] as num?)?.toDouble().clamp(0, 1) ?? 1)
             .toDouble();
     final minimalMode = settings['overlayMode'] == 'minimal';
-    final frostedGlass = settings['frostedGlass'] as bool? ?? true;
+    final frostedGlass = settings['frostedGlass'] as bool? ?? false;
     final transparentBorder =
         settings['transparentOverlayBorder'] as bool? ?? false;
     return Scaffold(
@@ -386,7 +396,9 @@ class _OverlaySurfaceState extends State<OverlaySurface> {
                     if (frostedGlass) {
                       return FrostedGlassLayer(
                         tint: context.colors.background,
-                        opacity: backgroundOpacity,
+                        opacity: frostedGlassOpacity,
+                        glow: frostedGlassGlow,
+                        blur: frostedGlassBlur,
                         radius: radius,
                         showBorder: !transparentBorder,
                         child: content,
@@ -649,7 +661,6 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
                 const AppLogo(size: 20),
                 const SizedBox(width: 8),
                 Expanded(
-                  flex: 2,
                   child: Text(
                     s.mapName,
                     overflow: TextOverflow.ellipsis,
@@ -660,15 +671,13 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    widget.app.leagueName,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.colors.mutedForeground,
-                    ),
+                Text(
+                  widget.app.leagueName,
+                  maxLines: 1,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.mutedForeground,
                   ),
                 ),
               ],
@@ -1247,6 +1256,12 @@ class _OverlayQuickSettingsState extends State<_OverlayQuickSettings> {
     final backgroundOpacity =
         ((settings['backgroundOpacity'] as num?)?.toDouble().clamp(0, 1) ?? .94)
             .toDouble();
+    final frostedGlass = settings['frostedGlass'] as bool? ?? false;
+    final displayedBackgroundOpacity = frostedGlass
+        ? ((settings['frostedGlassOpacity'] as num?)?.toDouble().clamp(0, 1) ??
+                  .7)
+              .toDouble()
+        : backgroundOpacity;
     final textOpacity =
         ((settings['textOpacity'] as num?)?.toDouble().clamp(0, 1) ?? 1.0)
             .toDouble();
@@ -1256,110 +1271,126 @@ class _OverlayQuickSettingsState extends State<_OverlayQuickSettings> {
       elevation: 0,
       child: SizedBox(
         width: adjusting ? 300 : 270,
-        child: Padding(
-          padding: EdgeInsets.all(adjusting ? 0 : 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!adjusting) ...[
-                Text(l.settings, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(child: Text(l.overlayMode)),
-                    DropdownButton<String>(
-                      value: mode,
-                      items: [
-                        DropdownMenuItem(
-                          value: 'floating',
-                          child: Text(l.floating),
-                        ),
-                        DropdownMenuItem(
-                          value: 'minimal',
-                          child: Text(l.minimal),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) _update({'overlayMode': value});
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(child: Text(l.windowAppearance)),
-                    DropdownButton<String>(
-                      value: windowStyle,
-                      items: [
-                        DropdownMenuItem(
-                          value: 'frameless',
-                          child: Text(l.framelessWindow),
-                        ),
-                        DropdownMenuItem(
-                          value: 'normal',
-                          child: Text(l.normalWindow),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          _update({'overlayWindowStyle': value});
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-              if (adjustingOpacity == null || adjustingOpacity == 'text')
-                _opacitySlider(
-                  key: const ValueKey('text-opacity'),
-                  value: textOpacity,
-                  onChanged: (value) => _update({'textOpacity': value}),
-                  onStart: () => setState(() => adjustingOpacity = 'text'),
-                  onEnd: (value) {
-                    _update({'textOpacity': value});
-                    setState(() => adjustingOpacity = null);
-                  },
-                ),
-              if (adjustingOpacity == null || adjustingOpacity == 'background')
-                _opacitySlider(
-                  key: const ValueKey('background-opacity'),
-                  value: backgroundOpacity,
-                  onChanged: (value) => _update({'backgroundOpacity': value}),
-                  onStart: () =>
-                      setState(() => adjustingOpacity = 'background'),
-                  onEnd: (value) {
-                    _update({'backgroundOpacity': value});
-                    setState(() => adjustingOpacity = null);
-                  },
-                ),
-              if (!adjusting) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(child: Text(l.clickThrough)),
-                    FSwitch(
-                      value: settings['clickThrough'] as bool? ?? false,
-                      onChange: (value) {
-                        _update({'clickThrough': value});
-                        if (value) Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(
-                      MaterialLocalizations.of(context).closeButtonLabel,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(adjusting ? 0 : 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!adjusting) ...[
+                  Text(
+                    l.settings,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: Text(l.overlayMode)),
+                      DropdownButton<String>(
+                        value: mode,
+                        items: [
+                          DropdownMenuItem(
+                            value: 'floating',
+                            child: Text(l.floating),
+                          ),
+                          DropdownMenuItem(
+                            value: 'minimal',
+                            child: Text(l.minimal),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) _update({'overlayMode': value});
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: Text(l.windowAppearance)),
+                      DropdownButton<String>(
+                        value: windowStyle,
+                        items: [
+                          DropdownMenuItem(
+                            value: 'frameless',
+                            child: Text(l.framelessWindow),
+                          ),
+                          DropdownMenuItem(
+                            value: 'normal',
+                            child: Text(l.normalWindow),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            _update({'overlayWindowStyle': value});
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (adjustingOpacity == null || adjustingOpacity == 'text')
+                  _opacitySlider(
+                    key: const ValueKey('text-opacity'),
+                    value: textOpacity,
+                    onChanged: (value) => _update({'textOpacity': value}),
+                    onStart: () => setState(() => adjustingOpacity = 'text'),
+                    onEnd: (value) {
+                      _update({'textOpacity': value});
+                      setState(() => adjustingOpacity = null);
+                    },
+                  ),
+                if (adjustingOpacity == null ||
+                    adjustingOpacity == 'background')
+                  _opacitySlider(
+                    key: const ValueKey('background-opacity'),
+                    value: displayedBackgroundOpacity,
+                    onChanged: (value) => _update({
+                      frostedGlass
+                              ? 'frostedGlassOpacity'
+                              : 'backgroundOpacity':
+                          value,
+                    }),
+                    onStart: () =>
+                        setState(() => adjustingOpacity = 'background'),
+                    onEnd: (value) {
+                      _update({
+                        frostedGlass
+                                ? 'frostedGlassOpacity'
+                                : 'backgroundOpacity':
+                            value,
+                      });
+                      setState(() => adjustingOpacity = null);
+                    },
+                  ),
+                if (!adjusting) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: Text(l.clickThrough)),
+                      FSwitch(
+                        value: settings['clickThrough'] as bool? ?? false,
+                        onChange: (value) {
+                          _update({'clickThrough': value});
+                          if (value) Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        MaterialLocalizations.of(context).closeButtonLabel,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

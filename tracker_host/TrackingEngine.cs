@@ -13,6 +13,15 @@ namespace LootTracker.App;
 
 internal sealed class LootTrackerEngine : IDisposable
 {
+    internal enum AutomaticTrackingAction
+    {
+        None,
+        Pause,
+        Resume,
+    }
+
+    internal static readonly TimeSpan AwayAfter = TimeSpan.FromMinutes(20);
+
     internal const string CostEntryPrefix = "__cost_preset__:";
     private static readonly Regex EmbeddedPricePattern = new(
         @"[\[【]\s*(?<amount>\d+(?:[\.,]\d+)?)\s*(?<unit>[dDeE])\s*[\]】]\s*$",
@@ -48,6 +57,7 @@ internal sealed class LootTrackerEngine : IDisposable
     private DateTime nextAutoSaveUtc;
     private DateTime nextPriceRefreshCheckUtc;
     private DateTime nextLeagueRefreshCheckUtc;
+    private DateTime? safeZoneEnteredUtc;
     private MapRun? current;
     private Dictionary<string, long>? baseline;
     private Dictionary<string, long>? previousInventory;
@@ -130,12 +140,24 @@ internal sealed class LootTrackerEngine : IDisposable
             this.persistedPriceSyncUtc = this.priceCache.LastSyncUtc;
         }
 
+        bool gameConnected = Core.Process.Pid != 0;
+        if (!gameConnected)
+        {
+            this.HandleGameUnavailable(now);
+            this.ApplyAutomaticTrackingState(now, gameConnected: false);
+            return;
+        }
+
+        // Area loading briefly leaves InGameState even though the game is still running. Pausing
+        // here would make an ordinary map -> hideout transition stop the session clock before the
+        // 20-minute safe-zone grace period has even begun.
         if (Core.States.GameCurrentState != GameStateTypes.InGameState)
         {
             return;
         }
 
         this.UpdateAreaState();
+        this.ApplyAutomaticTrackingState(DateTime.UtcNow, gameConnected: true);
         this.UpdateLiveInventory();
         this.ScanKills();
 
@@ -254,6 +276,7 @@ internal sealed class LootTrackerEngine : IDisposable
         this.recentPickups.Clear();
         this.monsterTallies.Clear();
         this.lastZoneHash = string.Empty;
+        this.safeZoneEnteredUtc = null;
         this.sessionStartUtc = DateTime.UtcNow;
         this.sessionId = Guid.NewGuid().ToString("N");
         this.sessionPausedTime = TimeSpan.Zero;
@@ -481,10 +504,7 @@ internal sealed class LootTrackerEngine : IDisposable
 
         if (isMap)
         {
-            if (this.trackingPaused)
-            {
-                this.ResumeTracking(now, false);
-            }
+            this.safeZoneEnteredUtc = null;
 
             this.BankActiveTime(now);
             if (wasOnMap && this.current != null && this.baseline != null && this.TrySnapshotInventory(out var outgoing))
@@ -518,7 +538,7 @@ internal sealed class LootTrackerEngine : IDisposable
                 this.current.FrozenProfitEx = null;
             }
 
-            this.runStartUtc = now;
+            this.runStartUtc = this.trackingPaused ? null : now;
             this.baseline = null;
             this.previousInventory = null;
             this.baselinePending = true;
@@ -527,6 +547,11 @@ internal sealed class LootTrackerEngine : IDisposable
         }
         else if (this.current != null)
         {
+            if (wasOnMap || this.safeZoneEnteredUtc == null)
+            {
+                this.safeZoneEnteredUtc = now;
+            }
+
             this.BankActiveTime(now);
             if (this.baseline != null && this.TrySnapshotInventory(out var snapshot))
             {
@@ -542,8 +567,69 @@ internal sealed class LootTrackerEngine : IDisposable
             this.current.ClosingDivineRate = this.priceCache.DivineToExaltedRate;
             this.current.FrozenProfitEx = this.NetValue(this.current, this.current.Gained);
         }
+        else if (this.safeZoneEnteredUtc == null)
+        {
+            this.safeZoneEnteredUtc = now;
+        }
 
         this.SaveActiveSession();
+    }
+
+    private void HandleGameUnavailable(DateTime now)
+    {
+        if (this.onMap)
+        {
+            this.BankActiveTime(now);
+            if (this.current != null)
+            {
+                MergeInto(this.current.Gained, this.liveLegDelta);
+            }
+        }
+
+        this.onMap = false;
+        this.lastZoneHash = string.Empty;
+        this.safeZoneEnteredUtc = null;
+        this.baseline = null;
+        this.previousInventory = null;
+        this.baselinePending = false;
+        this.liveLegDelta.Clear();
+    }
+
+    private void ApplyAutomaticTrackingState(DateTime now, bool gameConnected)
+    {
+        switch (DecideAutomaticTrackingAction(
+            gameConnected,
+            this.onMap,
+            this.trackingPaused,
+            this.safeZoneEnteredUtc,
+            now))
+        {
+            case AutomaticTrackingAction.Pause:
+                this.PauseTracking();
+                break;
+            case AutomaticTrackingAction.Resume:
+                this.ResumeTracking(now, true);
+                break;
+        }
+    }
+
+    internal static AutomaticTrackingAction DecideAutomaticTrackingAction(
+        bool gameConnected,
+        bool onMap,
+        bool trackingPaused,
+        DateTime? safeZoneEnteredUtc,
+        DateTime now)
+    {
+        if (gameConnected && onMap)
+        {
+            return trackingPaused ? AutomaticTrackingAction.Resume : AutomaticTrackingAction.None;
+        }
+
+        bool away = !gameConnected ||
+            (safeZoneEnteredUtc is { } entered && now - entered >= AwayAfter);
+        return away && !trackingPaused
+            ? AutomaticTrackingAction.Pause
+            : AutomaticTrackingAction.None;
     }
 
     private void UpdateLiveInventory()

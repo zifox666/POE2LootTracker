@@ -36,7 +36,7 @@ dotnet test tracker_host_tests/TrackerHost.Tests.csproj -c Release
 
 ## 版本管理
 
-`pubspec.yaml` 的 `version:` 是唯一版本来源，格式为 `MAJOR.MINOR.PATCH+BUILD`。修改版本后运行：
+`pubspec.yaml` 的 `version:` 是唯一版本来源，格式为 `MAJOR.MINOR.PATCH`。修改版本后运行：
 
 ```powershell
 dart run tool/version.dart
@@ -51,7 +51,7 @@ Windows EXE 版本由 Flutter 构建系统直接从 `pubspec.yaml` 传给 Runner
 
 ## 自动打包与发布
 
-发布使用与语义版本完全一致的标签。例如 `pubspec.yaml` 为 `1.2.3+7` 时：
+发布使用与语义版本完全一致的标签。例如 `pubspec.yaml` 为 `1.2.3` 时：
 
 ```powershell
 dart run tool/version.dart

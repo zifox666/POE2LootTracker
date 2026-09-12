@@ -59,6 +59,12 @@ void main() {
         ).compareTo(SemanticVersion.parse('v1.2.3')),
         0,
       );
+      expect(
+        SemanticVersion.parse(
+          '1.2.3+45',
+        ).compareTo(SemanticVersion.parse('v1.2.3')),
+        0,
+      );
     });
 
     test('rejects release tags outside the supported format', () {
@@ -85,6 +91,10 @@ void main() {
     test('does not offer the current or an older version', () {
       expect(
         parseLatestRelease(_release('v1.2.3'), currentVersion: '1.2.3'),
+        isNull,
+      );
+      expect(
+        parseLatestRelease(_release('v1.2.3'), currentVersion: '1.2.3+45'),
         isNull,
       );
       expect(

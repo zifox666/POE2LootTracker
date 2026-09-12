@@ -12,8 +12,8 @@ Apply the repository's release path after completing a functional change. Keep `
 ## Workflow
 
 1. Confirm that the feature change is complete and inspect the working tree with `git status --short`.
-2. Choose the version increment requested by the task. When no release level is specified, increment the patch version and the pubspec build number. Do not alter `lib/app_version.dart` or `tracker_host/TrackerHost.csproj` by hand.
-3. Change only `pubspec.yaml`'s top-level `version:` value, preserving the format `MAJOR.MINOR.PATCH+BUILD`.
+2. Choose the version increment requested by the task. When no release level is specified, increment the patch version. Do not alter `lib/app_version.dart` or `tracker_host/TrackerHost.csproj` by hand.
+3. Change only `pubspec.yaml`'s top-level `version:` value, preserving the format `MAJOR.MINOR.PATCH` without a `+BUILD` suffix.
 4. Synchronize generated version files from that source:
 
    ```powershell
@@ -61,6 +61,6 @@ Apply the repository's release path after completing a functional change. Keep `
 ## Release Invariants
 
 - Keep `pubspec.yaml` as the single version source; `tool/version.dart` generates `lib/app_version.dart` and `tracker_host/TrackerHost.csproj`.
-- Use semantic tags in the form `vMAJOR.MINOR.PATCH`; omit the pubspec build number from the tag.
+- Use bare semantic versions in `pubspec.yaml` and tags in the form `vMAJOR.MINOR.PATCH`; do not add a pubspec build-number suffix.
 - Preserve the full Flutter application and self-contained `tracker_host` as one Windows bundle. GitHub Actions, not the local machine, creates the distributable ZIP and its checksum.
 - Stop and report failures from synchronization, validation, git checks, or GitHub Actions. Do not bypass failed checks or silently publish a mismatched version.

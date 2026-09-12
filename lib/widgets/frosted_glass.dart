@@ -5,10 +5,9 @@ import 'package:flutter/material.dart';
 
 /// Fraction of the background-opacity setting that reaches the frost tint.
 ///
-/// The plate is meant to be looked *through*, so the glass keeps a third of the setting in reserve:
-/// at the 0.94 default a full-strength tint would hide the game exactly as much as the flat panel
-/// this replaces, and the sheen and the bloom would have nothing to sit on top of.
-const double frostedTintScale = .68;
+/// The native window stays on its known-good transparent path. This faint tint adds legibility
+/// without changing the HWND composition mode or hiding the game behind a system fallback plate.
+const double frostedTintScale = .24;
 
 /// The tint's opacity for a 0..1 background-opacity setting.
 double frostedTintAlpha(double opacity) =>
@@ -29,22 +28,17 @@ List<Offset> _buildGrain() {
   );
 }
 
-/// A hand-rolled frosted-glass panel: a translucent frost, a bloom and sheen from the top-left, a
-/// fine grain, and a bright inner edge.
+/// A lightweight finish over the natively transparent window: tint, bloom, sheen, grain and rim.
 ///
-/// The overlay window stays natively transparent, and Windows' own blur is deliberately *not* asked
-/// for. On this window class -- a layered child window with per-pixel alpha -- the composition API
-/// produced an opaque black plate instead of the desktop behind it, and the newer system-backdrop
-/// path is Windows 11 only and equally unreliable there. A [BackdropFilter] cannot stand in either:
-/// it samples this engine's own layer tree, and nothing of the game is ever in it.
-///
-/// So this paints the look of frosted glass instead of its physics. That is all the overlay needs:
-/// it is a legibility layer drawn over the game, not a window material, and it has to behave the
-/// same on every Windows version.
+/// A [BackdropFilter] can only sample this engine's own layer tree, so it cannot blur the game or
+/// another window. This painter deliberately does not attempt native Acrylic; it preserves the
+/// working cross-window transparency and adds only inexpensive visual character over it.
 class FrostedGlassLayer extends StatelessWidget {
   const FrostedGlassLayer({
     required this.tint,
     required this.opacity,
+    required this.glow,
+    required this.blur,
     required this.radius,
     this.showBorder = true,
     this.child,
@@ -57,6 +51,12 @@ class FrostedGlassLayer extends StatelessWidget {
   /// The 0..1 background-opacity setting. It scales the frost, so the existing slider keeps meaning
   /// "how much of the game the overlay hides".
   final double opacity;
+
+  /// Strength of the painted highlight and light-catching rim.
+  final double glow;
+
+  /// Controls how wide and soft the painted light spreads. It does not blur the external window.
+  final double blur;
 
   /// Corner radius of the plate, matched to the window it fills.
   final double radius;
@@ -74,13 +74,12 @@ class FrostedGlassLayer extends StatelessWidget {
     painter: _FrostPainter(
       tint: tint,
       opacity: opacity.clamp(0, 1).toDouble(),
+      glow: glow.clamp(0, 1).toDouble(),
+      blur: blur.clamp(0, 1).toDouble(),
       radius: radius,
       showBorder: showBorder,
     ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: child,
-    ),
+    child: ClipRRect(borderRadius: BorderRadius.circular(radius), child: child),
   );
 }
 
@@ -88,12 +87,16 @@ class _FrostPainter extends CustomPainter {
   const _FrostPainter({
     required this.tint,
     required this.opacity,
+    required this.glow,
+    required this.blur,
     required this.radius,
     required this.showBorder,
   });
 
   final Color tint;
   final double opacity;
+  final double glow;
+  final double blur;
   final double radius;
   final bool showBorder;
 
@@ -108,6 +111,8 @@ class _FrostPainter extends CustomPainter {
       Radius.circular(math.min(radius, size.shortestSide / 2)),
     );
     final strength = opacity.clamp(0, 1).toDouble();
+    final glowStrength = glow.clamp(0, 1).toDouble();
+    final blurStrength = blur.clamp(0, 1).toDouble();
 
     // 1. Frost. Everything else is decoration on top of this tint, and without it the plate would
     //    be an empty frame -- which is exactly how the overlay looked while the native blur was in
@@ -126,13 +131,13 @@ class _FrostPainter extends CustomPainter {
       Paint()
         ..shader = ui.Gradient.radial(
           Offset(size.width * .06, -size.height * .12),
-          size.longestSide * .9,
+          size.longestSide * (.45 + .65 * blurStrength),
           [
-            Colors.white.withValues(alpha: .13 * strength + .02),
-            Colors.white.withValues(alpha: .015),
+            Colors.white.withValues(alpha: .02 + .17 * glowStrength),
+            Colors.white.withValues(alpha: .01 + .02 * glowStrength),
             Colors.transparent,
           ],
-          const [0, .45, 1],
+          [0, .25 + .35 * blurStrength, 1],
         ),
     );
 
@@ -145,9 +150,9 @@ class _FrostPainter extends CustomPainter {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: .05 * strength),
+            Colors.white.withValues(alpha: .07 * glowStrength),
             Colors.transparent,
-            Colors.black.withValues(alpha: .16 * strength),
+            Colors.black.withValues(alpha: .08 * strength),
           ],
           stops: const [0, .55, 1],
         ).createShader(rect),
@@ -185,9 +190,9 @@ class _FrostPainter extends CustomPainter {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.white.withValues(alpha: .34 + .12 * strength),
-              Colors.white.withValues(alpha: .10),
-              Colors.white.withValues(alpha: .05),
+              Colors.white.withValues(alpha: .16 + .30 * glowStrength),
+              Colors.white.withValues(alpha: .05 + .08 * glowStrength),
+              Colors.white.withValues(alpha: .02 + .04 * glowStrength),
             ],
             stops: const [0, .5, 1],
           ).createShader(rect),
@@ -199,7 +204,7 @@ class _FrostPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
-          ..color = Colors.white.withValues(alpha: .03 + .04 * strength),
+          ..color = Colors.white.withValues(alpha: .02 + .06 * glowStrength),
       );
     }
   }
@@ -208,6 +213,8 @@ class _FrostPainter extends CustomPainter {
   bool shouldRepaint(_FrostPainter oldDelegate) =>
       oldDelegate.tint != tint ||
       oldDelegate.opacity != opacity ||
+      oldDelegate.glow != glow ||
+      oldDelegate.blur != blur ||
       oldDelegate.radius != radius ||
       oldDelegate.showBorder != showBorder;
 }

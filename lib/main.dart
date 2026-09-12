@@ -194,6 +194,7 @@ class _DesktopShellState extends State<_DesktopShell> {
   bool resumeAsked = false;
   bool startupDialogsFinished = false;
   bool updatePromptScheduled = false;
+  bool databaseResetPromptScheduled = false;
   String? promptedUpdateVersion;
 
   @override
@@ -225,6 +226,10 @@ class _DesktopShellState extends State<_DesktopShell> {
 
   void _changed() {
     if (widget.controller.loading) return;
+    if (widget.controller.databaseCorrupted) {
+      _scheduleDatabaseResetPrompt();
+      return;
+    }
     // Shown on every launch, not just the first: it is a disclaimer, and the only thing the earlier
     // acknowledgement decides is how long it locks its own button.
     _scheduleWarning();
@@ -232,6 +237,25 @@ class _DesktopShellState extends State<_DesktopShell> {
     if (runtimeStarted) {
       unawaited(runtime.restoreMainState());
       if (mounted) unawaited(runtime.updateMenu(AppLocalizations.of(context)));
+    }
+  }
+
+  void _scheduleDatabaseResetPrompt() {
+    if (databaseResetPromptScheduled) return;
+    databaseResetPromptScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => unawaited(_showDatabaseResetPrompt(corrupted: true)),
+    );
+  }
+
+  Future<void> _showDatabaseResetPrompt({required bool corrupted}) async {
+    if (!mounted) return;
+    final confirmed = await confirmDatabaseReset(context, corrupted: corrupted);
+    if (!confirmed || !mounted) return;
+    try {
+      await runtime.resetDatabaseAndRestart();
+    } catch (error) {
+      widget.controller.setError('database reset: $error');
     }
   }
 
@@ -338,6 +362,8 @@ class _DesktopShellState extends State<_DesktopShell> {
     );
   }
 
+  Future<void> _resetDatabase() => _showDatabaseResetPrompt(corrupted: false);
+
   @override
   void dispose() {
     widget.controller.removeListener(_changed);
@@ -352,5 +378,6 @@ class _DesktopShellState extends State<_DesktopShell> {
     onShowRecentLoot: widget.coordinator.previewRecentLoot,
     onNewSession: _newSession,
     onCloseWindow: _closeMainWindow,
+    onResetDatabase: _resetDatabase,
   );
 }

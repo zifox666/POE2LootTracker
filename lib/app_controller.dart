@@ -48,6 +48,7 @@ class AppController extends ChangeNotifier {
   String? selectedMapId;
   String marketQuery = '';
   String? error;
+  bool databaseCorrupted = false;
   bool loading = true;
   bool screenCaptureActive = false;
   UpdatePhase updatePhase = UpdatePhase.idle;
@@ -131,7 +132,9 @@ class AppController extends ChangeNotifier {
       offsets = _asMap(values[3]);
       await refreshMarket();
     } catch (exception) {
-      error = exception.toString();
+      final message = host.lastError ?? exception.toString();
+      databaseCorrupted = databaseCorrupted || _isDatabaseCorruption(message);
+      error ??= message;
     } finally {
       loading = false;
       notifyListeners();
@@ -447,7 +450,9 @@ class AppController extends ChangeNotifier {
           _asMap(event['payload'])['active'] as bool? ?? false;
     }
     if (event['type'] == 'hostError') {
-      error = _asMap(event['payload'])['message']?.toString();
+      final message = _asMap(event['payload'])['message']?.toString() ?? '';
+      databaseCorrupted = databaseCorrupted || _isDatabaseCorruption(message);
+      error = message;
     }
     notifyListeners();
   }
@@ -517,6 +522,13 @@ class AppController extends ChangeNotifier {
   }
 }
 
+bool _isDatabaseCorruption(String message) {
+  final normalized = message.toLowerCase();
+  return normalized.contains('sqlite error 11') ||
+      normalized.contains('file is not a database') ||
+      (normalized.contains('database') && normalized.contains('malformed'));
+}
+
 const defaultSettings = <String, dynamic>{
   'backgroundOpacity': 0.94,
   'textOpacity': 1.0,
@@ -528,7 +540,10 @@ const defaultSettings = <String, dynamic>{
   'minimalFontScale': 1.0,
   'mainFontScale': 1.0,
   'transparentOverlayBorder': false,
-  'frostedGlass': true,
+  'frostedGlass': false,
+  'frostedGlassGlow': 0.5,
+  'frostedGlassOpacity': 0.7,
+  'frostedGlassBlur': 0.65,
   'pickupToastsEnabled': true,
   'pickupToastMaxVisible': 3,
   'pickupToastDurationSeconds': 2.5,

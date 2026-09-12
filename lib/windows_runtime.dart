@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -48,9 +49,18 @@ class WindowsRuntime with TrayListener, WindowListener {
   }
 
   Future<void> restoreMainState() async {
-    if (restored || !app.startHost) return;
+    if (restored || !app.startHost || !app.host.isRunning) return;
+    final Map<String, dynamic> state;
+    try {
+      state = await app.getWindowState('main');
+    } catch (error) {
+      // This is invoked without awaiting from a controller listener. A host that exits during
+      // startup already reports its original error through AppController; do not replace it with
+      // an unhandled window-state request.
+      debugPrint('startup: restoring the main window failed: $error');
+      return;
+    }
     restored = true;
-    final state = await app.getWindowState('main');
     if (state.isEmpty) return;
     final width = (state['width'] as num?)?.toDouble() ?? 0;
     final height = (state['height'] as num?)?.toDouble() ?? 0;
@@ -140,6 +150,28 @@ class WindowsRuntime with TrayListener, WindowListener {
 
   Future<void> shutdown() async {
     await app.host.dispose();
+    await trayManager.destroy();
+    await windowManager.destroy();
+  }
+
+  Future<void> resetDatabaseAndRestart() async {
+    await app.host.dispose();
+    final appData = Platform.environment['APPDATA'];
+    if (appData == null || appData.isEmpty) {
+      throw StateError('APPDATA is unavailable');
+    }
+    final separator = Platform.pathSeparator;
+    final databasePath =
+        '$appData${separator}POE2LootTracker${separator}loot_tracker.sqlite3';
+    for (final suffix in const ['', '-wal', '-shm']) {
+      final file = File('$databasePath$suffix');
+      if (await file.exists()) await file.delete();
+    }
+    await Process.start(
+      Platform.resolvedExecutable,
+      const [],
+      mode: ProcessStartMode.detached,
+    );
     await trayManager.destroy();
     await windowManager.destroy();
   }

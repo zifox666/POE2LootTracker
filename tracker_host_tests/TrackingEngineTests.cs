@@ -87,4 +87,30 @@ public sealed class TrackingEngineTests
         Assert.Equal(string.Empty, run.CostPresetId);
         Assert.Equal(0, run.CostEx);
     }
+
+    [Fact]
+    public void TrackingPausesWhenGameIsUnavailableOrSafeZoneReachesTwentyMinutes()
+    {
+        var now = DateTime.UtcNow;
+
+        Assert.Equal(
+            LootTrackerEngine.AutomaticTrackingAction.Pause,
+            LootTrackerEngine.DecideAutomaticTrackingAction(false, false, false, null, now));
+        Assert.Equal(
+            LootTrackerEngine.AutomaticTrackingAction.None,
+            LootTrackerEngine.DecideAutomaticTrackingAction(true, false, false, now.AddMinutes(-19), now));
+        Assert.Equal(
+            LootTrackerEngine.AutomaticTrackingAction.Pause,
+            LootTrackerEngine.DecideAutomaticTrackingAction(true, false, false, now.AddMinutes(-20), now));
+    }
+
+    [Fact]
+    public void EnteringMapAlwaysResumesPausedTracking()
+    {
+        var now = DateTime.UtcNow;
+
+        Assert.Equal(
+            LootTrackerEngine.AutomaticTrackingAction.Resume,
+            LootTrackerEngine.DecideAutomaticTrackingAction(true, true, true, now.AddHours(-1), now));
+    }
 }

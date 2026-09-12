@@ -326,6 +326,96 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settings;
 
+  /// No description provided for @searchSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Search settings'**
+  String get searchSettings;
+
+  /// No description provided for @settingsSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Search results'**
+  String get settingsSearchResults;
+
+  /// No description provided for @noSettingsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching settings'**
+  String get noSettingsFound;
+
+  /// No description provided for @generalSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get generalSettings;
+
+  /// No description provided for @overlaySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlay'**
+  String get overlaySettings;
+
+  /// No description provided for @notificationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationSettings;
+
+  /// No description provided for @trackingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking'**
+  String get trackingSettings;
+
+  /// No description provided for @dataSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get dataSettings;
+
+  /// No description provided for @updateSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updateSettings;
+
+  /// No description provided for @advancedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advancedSettings;
+
+  /// No description provided for @gameSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Game and prices'**
+  String get gameSettings;
+
+  /// No description provided for @applicationBehavior.
+  ///
+  /// In en, this message translates to:
+  /// **'Application behavior'**
+  String get applicationBehavior;
+
+  /// No description provided for @windowBehavior.
+  ///
+  /// In en, this message translates to:
+  /// **'Window behavior'**
+  String get windowBehavior;
+
+  /// No description provided for @appearanceSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearanceSettings;
+
+  /// No description provided for @typographySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get typographySettings;
+
   /// No description provided for @currentSession.
   ///
   /// In en, this message translates to:
@@ -737,8 +827,74 @@ abstract class AppLocalizations {
   /// No description provided for @frostedGlass.
   ///
   /// In en, this message translates to:
-  /// **'Frosted glass'**
+  /// **'Frosted glass (experimental)'**
   String get frostedGlass;
+
+  /// No description provided for @frostedGlassGlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Glow intensity'**
+  String get frostedGlassGlow;
+
+  /// No description provided for @frostedGlassOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass background opacity'**
+  String get frostedGlassOpacity;
+
+  /// No description provided for @frostedGlassBlur.
+  ///
+  /// In en, this message translates to:
+  /// **'Blur intensity'**
+  String get frostedGlassBlur;
+
+  /// No description provided for @databaseManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Database'**
+  String get databaseManagement;
+
+  /// No description provided for @resetDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset database'**
+  String get resetDatabase;
+
+  /// No description provided for @resetDatabaseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all tracking history, settings, and market cache stored in the database, then restart the app.'**
+  String get resetDatabaseHint;
+
+  /// No description provided for @resetDatabaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset database?'**
+  String get resetDatabaseTitle;
+
+  /// No description provided for @resetDatabaseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes all tracking history, settings, and market cache stored in the database, then restarts the app. This cannot be undone.'**
+  String get resetDatabaseBody;
+
+  /// No description provided for @databaseCorruptedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Database corrupted'**
+  String get databaseCorruptedTitle;
+
+  /// No description provided for @databaseCorruptedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The tracking service cannot start because the database is corrupted. Delete the entire database and restart the app? All tracking history and settings will be permanently lost.'**
+  String get databaseCorruptedBody;
+
+  /// No description provided for @deleteDatabaseAndRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and restart'**
+  String get deleteDatabaseAndRestart;
 
   /// No description provided for @transparentOverlayBorder.
   ///

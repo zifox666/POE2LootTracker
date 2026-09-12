@@ -14,19 +14,19 @@ internal static class Program
         Console.InputEncoding = Encoding.UTF8;
         Console.OutputEncoding = Encoding.UTF8;
 
-        using var store = new SqliteStore(AppSettings.DatabasePath);
-        var settings = AppSettings.Load(store);
-        settings.Save(store);
-        store.SaveOffsetProfile(settings.Offsets, "active");
-
-        if (args.Contains("--smoke", StringComparer.Ordinal))
-        {
-            Console.WriteLine(ProtocolJson.Message("result", new { ok = true, data = new { database = AppSettings.DatabasePath } }, "smoke"));
-            return 0;
-        }
-
         try
         {
+            using var store = new SqliteStore(AppSettings.DatabasePath);
+            var settings = AppSettings.Load(store);
+            settings.Save(store);
+            store.SaveOffsetProfile(settings.Offsets, "active");
+
+            if (args.Contains("--smoke", StringComparer.Ordinal))
+            {
+                Console.WriteLine(ProtocolJson.Message("result", new { ok = true, data = new { database = AppSettings.DatabasePath } }, "smoke"));
+                return 0;
+            }
+
             using var game = new GameHost();
             using var engine = new LootTrackerEngine(settings, store);
             var server = new HostServer(game, engine, settings, store);

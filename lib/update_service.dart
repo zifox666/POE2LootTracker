@@ -60,7 +60,9 @@ class SemanticVersion implements Comparable<SemanticVersion> {
   const SemanticVersion(this.major, this.minor, this.patch);
 
   factory SemanticVersion.parse(String text) {
-    final match = RegExp(r'^v?(\d+)\.(\d+)\.(\d+)$').firstMatch(text.trim());
+    final match = RegExp(
+      r'^v?(\d+)\.(\d+)\.(\d+)(?:\+\d+)?$',
+    ).firstMatch(text.trim());
     if (match == null) {
       throw UpdateException('Unsupported release version: $text');
     }

@@ -14,7 +14,10 @@ internal sealed class AppSettings
     public double MinimalFontScale { get; set; } = 1.0;
     public double MainFontScale { get; set; } = 1.0;
     public bool TransparentOverlayBorder { get; set; }
-    public bool FrostedGlass { get; set; } = true;
+    public bool FrostedGlass { get; set; } = false;
+    public double FrostedGlassGlow { get; set; } = 0.5;
+    public double FrostedGlassOpacity { get; set; } = 0.7;
+    public double FrostedGlassBlur { get; set; } = 0.65;
     public bool PickupToastsEnabled { get; set; } = true;
     public int PickupToastMaxVisible { get; set; } = 3;
     public double PickupToastDurationSeconds { get; set; } = 2.5;
@@ -88,6 +91,9 @@ internal sealed class AppSettings
         MainFontScale = value.MainFontScale;
         TransparentOverlayBorder = value.TransparentOverlayBorder;
         FrostedGlass = value.FrostedGlass;
+        FrostedGlassGlow = value.FrostedGlassGlow;
+        FrostedGlassOpacity = value.FrostedGlassOpacity;
+        FrostedGlassBlur = value.FrostedGlassBlur;
         PickupToastsEnabled = value.PickupToastsEnabled;
         PickupToastMaxVisible = value.PickupToastMaxVisible;
         PickupToastDurationSeconds = value.PickupToastDurationSeconds;
@@ -122,6 +128,9 @@ internal sealed class AppSettings
         MainFontScale = value.MainFontScale;
         TransparentOverlayBorder = value.TransparentOverlayBorder;
         FrostedGlass = value.FrostedGlass;
+        FrostedGlassGlow = value.FrostedGlassGlow;
+        FrostedGlassOpacity = value.FrostedGlassOpacity;
+        FrostedGlassBlur = value.FrostedGlassBlur;
         PickupToastsEnabled = value.PickupToastsEnabled;
         PickupToastMaxVisible = value.PickupToastMaxVisible;
         PickupToastDurationSeconds = value.PickupToastDurationSeconds;
@@ -187,6 +196,9 @@ internal sealed class AppSettings
         }
         BackgroundOpacity = Math.Clamp(BackgroundOpacity, 0, 1);
         TextOpacity = Math.Clamp(TextOpacity, 0, 1);
+        FrostedGlassGlow = Math.Clamp(FrostedGlassGlow, 0, 1);
+        FrostedGlassOpacity = Math.Clamp(FrostedGlassOpacity, 0, 1);
+        FrostedGlassBlur = Math.Clamp(FrostedGlassBlur, 0, 1);
         OverlayMode = OverlayMode == "minimal" ? "minimal" : "floating";
         OverlayWindowStyle = OverlayWindowStyle == "normal" ? "normal" : "frameless";
         FloatingFontScale = Math.Clamp(FloatingFontScale, 0.75, 1.5);

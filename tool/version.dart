@@ -24,7 +24,8 @@
 
 import 'dart:io';
 
-/// The version as it appears in `pubspec.yaml`: `1.2.3` or `1.2.3+45`.
+/// The version from `pubspec.yaml`. New versions are bare `1.2.3`; `+45` remains readable so old
+/// revisions can still run this tool.
 class ProjectVersion {
   const ProjectVersion({
     required this.major,
@@ -36,25 +37,18 @@ class ProjectVersion {
   final int major;
   final int minor;
   final int patch;
-  final int build;
+  final int? build;
 
   /// The semver half, `1.2.3`. This is what a release tag carries.
   String get semantic => '$major.$minor.$patch';
 
-  /// The build number, `45`. Pubspec defaults it to 0 when written as a bare `1.2.3`.
-  String get buildNumber => '$build';
-
-  /// The full pubspec form, `1.2.3+45`.
-  String get full => '$semantic+$buildNumber';
+  /// The version exactly as represented by the supported current or legacy pubspec forms.
+  String get full => build == null ? semantic : '$semantic+$build';
 
   /// The four-part form Windows version resources want, `1.2.3.45`.
-  String get numeric => '$semantic.$buildNumber';
+  String get numeric => '$semantic.${build ?? 0}';
 
-  /// The release tag, `v1.2.3`.
-  ///
-  /// The build number is deliberately absent: it changes on every CI run for a given release, and a
-  /// tag that moved underneath its own release would break the "one tag, one artifact" rule that
-  /// makes the updater's SHA-256 check meaningful.
+  /// The release tag, `v1.2.3`. Legacy pubspec build metadata is deliberately omitted.
   String get tag => 'v$semantic';
 
   @override
@@ -94,15 +88,15 @@ ProjectVersion parseVersion(String text) {
   ).firstMatch(text.trim());
   if (match == null) {
     throw ToolFailure(
-      'pubspec.yaml declares the version "$text", which is not MAJOR.MINOR.PATCH or '
-      'MAJOR.MINOR.PATCH+BUILD.',
+      'pubspec.yaml declares the version "$text", which is not MAJOR.MINOR.PATCH or the '
+      'legacy MAJOR.MINOR.PATCH+BUILD form.',
     );
   }
   return ProjectVersion(
     major: int.parse(match.group(1)!),
     minor: int.parse(match.group(2)!),
     patch: int.parse(match.group(3)!),
-    build: int.parse(match.group(4) ?? '0'),
+    build: match.group(4) == null ? null : int.parse(match.group(4)!),
   );
 }
 
@@ -118,10 +112,7 @@ String renderAppVersion(ProjectVersion version) =>
 /// The semantic version, `1.2.3`. Release tags and update comparisons use exactly this.
 const String appVersion = '${version.semantic}';
 
-/// The pubspec build number, `45`.
-const String appBuildNumber = '${version.buildNumber}';
-
-/// The full pubspec form, `1.2.3+45`, for display and diagnostics.
+/// The canonical project version for display and diagnostics.
 const String appVersionFull = '${version.full}';
 
 /// The git tag a release of this version must carry, `v1.2.3`.

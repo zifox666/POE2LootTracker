@@ -432,7 +432,9 @@ class LootRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amount = formatAmount(entry.totalEx, divineRate);
+    final l = AppLocalizations.of(context);
+    final unitAmount = formatAmount(entry.unitEx, divineRate);
+    final totalAmount = formatAmount(entry.totalEx, divineRate);
     final signed = '${entry.count > 0 ? '+' : ''}${entry.count}';
     final price = onPrice;
     return InkWell(
@@ -460,25 +462,42 @@ class LootRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    entry.priced ? '${amount.value} ${amount.unit}' : '—',
+                    entry.priced
+                        ? '${l.unitPrice}: ${unitAmount.value} ${unitAmount.unit}'
+                        : '${l.unitPrice}: —',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.numberStyle.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: entry.totalEx < 0 ? tradingRed : tradingGreen,
+                      color: entry.unitEx < 0 ? tradingRed : tradingGreen,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              '× $signed',
-              style: TextStyle(
-                fontSize: 11,
-                color: context.colors.mutedForeground,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '× $signed',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: context.colors.mutedForeground,
+                  ),
+                ),
+                Text(
+                  entry.priced
+                      ? '${totalAmount.value} ${totalAmount.unit}'
+                      : '—',
+                  style: context.numberStyle.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: entry.totalEx < 0 ? tradingRed : tradingGreen,
+                  ),
+                ),
+              ],
             ),
             // The visible affordance for the case this list could not handle at all before: a drop
             // poe.ninja has no price for. Not a Tooltip: Material's Tooltip recycles its element

@@ -19,6 +19,7 @@ class MainShell extends StatefulWidget {
     required this.onShowRecentLoot,
     required this.onNewSession,
     required this.onCloseWindow,
+    required this.onResetDatabase,
     super.key,
   });
   final AppController controller;
@@ -29,6 +30,7 @@ class MainShell extends StatefulWidget {
   /// asks for confirmation first (and that dialog needs a build context).
   final VoidCallback onNewSession;
   final VoidCallback onCloseWindow;
+  final Future<void> Function() onResetDatabase;
   @override
   State<MainShell> createState() => _MainShellState();
 }
@@ -47,6 +49,7 @@ class _MainShellState extends State<MainShell> {
         onShowOverlay: widget.onShowOverlay,
         onShowRecentLoot: widget.onShowRecentLoot,
         onNewSession: widget.onNewSession,
+        onResetDatabase: widget.onResetDatabase,
       ),
     ];
     final entries = [

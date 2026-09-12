@@ -36,6 +36,7 @@ void main() {
           onShowRecentLoot: () {},
           onNewSession: () {},
           onCloseWindow: () {},
+          onResetDatabase: () async {},
         ),
       ),
     );
@@ -67,7 +68,7 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('settings show the current version and update control', (
+  testWidgets('settings categories, search, and update controls work', (
     tester,
   ) async {
     final controller = AppController(
@@ -95,20 +96,29 @@ void main() {
             onShowOverlay: () {},
             onShowRecentLoot: () {},
             onNewSession: () {},
+            onResetDatabase: () async {},
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('拾取通知'), findsOneWidget);
+    expect(find.text('搜索设置'), findsOneWidget);
+    expect(find.text('常规'), findsWidgets);
+
+    await tester.tap(find.text('拾取通知').first);
+    await tester.pumpAndSettle();
     expect(find.text('最多显示条数'), findsOneWidget);
     expect(find.text('显示时长'), findsOneWidget);
     expect(find.text('预览拾取通知'), findsOneWidget);
 
-    await tester.drag(find.byType(ListView), const Offset(0, -1000));
+    await tester.enterText(find.byType(TextField).first, '毛玻璃');
     await tester.pumpAndSettle();
+    expect(find.text('搜索结果'), findsOneWidget);
+    expect(find.text('毛玻璃（实验功能）'), findsOneWidget);
 
+    await tester.tap(find.text('更新').first);
+    await tester.pumpAndSettle();
     expect(find.text('软件更新'), findsOneWidget);
     expect(find.text('CDN（推荐）'), findsOneWidget);
     expect(find.text('当前版本 $appVersionFull'), findsOneWidget);

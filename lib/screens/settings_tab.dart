@@ -10,356 +10,719 @@ import '../overlay_window.dart' show overlayWindowStyle;
 import '../update_service.dart';
 import '../widgets/common.dart';
 
-class SettingsTab extends StatelessWidget {
+enum _SettingsCategory {
+  general,
+  overlay,
+  notifications,
+  tracking,
+  data,
+  updates,
+  advanced,
+}
+
+class SettingsTab extends StatefulWidget {
   const SettingsTab({
     required this.controller,
     required this.onShowOverlay,
     required this.onShowRecentLoot,
     required this.onNewSession,
+    required this.onResetDatabase,
     super.key,
   });
   final AppController controller;
   final VoidCallback onShowOverlay;
   final VoidCallback onShowRecentLoot;
   final VoidCallback onNewSession;
+  final Future<void> Function() onResetDatabase;
+
+  @override
+  State<SettingsTab> createState() => _SettingsTabState();
+}
+
+class _SettingsTabState extends State<SettingsTab> {
+  final searchController = TextEditingController();
+  _SettingsCategory selectedCategory = _SettingsCategory.general;
+
+  AppController get controller => widget.controller;
+  VoidCallback get onShowOverlay => widget.onShowOverlay;
+  VoidCallback get onShowRecentLoot => widget.onShowRecentLoot;
+  VoidCallback get onNewSession => widget.onNewSession;
+  Future<void> Function() get onResetDatabase => widget.onResetDatabase;
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final settings = controller.settings;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(28, 24, 28, 32),
+    final frostedGlass = settings['frostedGlass'] as bool? ?? false;
+    final query = searchController.text.trim().toLowerCase();
+    bool show(_SettingsCategory category, Iterable<String> terms) =>
+        query.isEmpty
+        ? selectedCategory == category
+        : terms.any((term) => term.toLowerCase().contains(query));
+    final categories = <(_SettingsCategory, String, String)>[
+      (_SettingsCategory.general, l.generalSettings, 'settings'),
+      (_SettingsCategory.overlay, l.overlaySettings, 'overlay'),
+      (_SettingsCategory.notifications, l.notificationSettings, 'loot'),
+      (_SettingsCategory.tracking, l.trackingSettings, 'play'),
+      (_SettingsCategory.data, l.dataSettings, 'market'),
+      (_SettingsCategory.updates, l.updateSettings, 'refresh'),
+      (_SettingsCategory.advanced, l.advancedSettings, 'mouse'),
+    ];
+    final hasSearchResults =
+        query.isEmpty ||
+        [
+          ...categories.map((item) => item.$2),
+          l.language,
+          l.theme,
+          l.mainFontSize,
+          l.gameSettings,
+          l.applicationBehavior,
+          l.windowBehavior,
+          l.appearanceSettings,
+          l.typographySettings,
+          l.league,
+          l.priceRefresh,
+          l.closeBehavior,
+          l.overlayMode,
+          l.floating,
+          l.minimal,
+          l.windowAppearance,
+          l.alwaysOnTop,
+          l.clickThrough,
+          l.frostedGlass,
+          l.transparentOverlayBorder,
+          l.textOpacity,
+          l.backgroundOpacity,
+          l.frostedGlassGlow,
+          l.frostedGlassOpacity,
+          l.frostedGlassBlur,
+          l.floatingFontSize,
+          l.minimalFontSize,
+          l.showOverlay,
+          l.pickupNotifications,
+          l.maxVisiblePickups,
+          l.pickupDisplayDuration,
+          l.previewPickupNotifications,
+          l.pause,
+          l.resume,
+          l.newSession,
+          l.confirmNewSession,
+          l.databaseManagement,
+          l.resetDatabase,
+          l.updateSource,
+          l.updateSourceCdn,
+          l.updateSourceNative,
+          l.updateSourceCustom,
+          l.checkForUpdates,
+          l.forceOverwriteUpdate,
+          l.offsetSettings,
+          l.playerInventory,
+          l.entity,
+          l.components,
+          l.itemOffsets,
+        ].any((term) => term.toLowerCase().contains(query));
+    return Row(
       children: [
-        _group(context, l.settings, [
-          _choice(
-            context,
-            l.language,
-            settings['language']?.toString() == 'zh'
-                ? 'zh'
-                : settings['language']?.toString() == 'en'
-                ? 'en'
-                : '',
-            {'': l.systemDefault, 'en': l.english, 'zh': l.chinese},
-            (value) => controller.updateSettings({'language': value}),
+        Container(
+          width: 190,
+          decoration: BoxDecoration(
+            color: context.colors.card.withValues(alpha: .55),
+            border: Border(right: BorderSide(color: context.colors.border)),
           ),
-          _choice(
-            context,
-            l.theme,
-            settings['themeMode']?.toString() ?? 'dark',
-            {'system': l.systemDefault, 'dark': l.dark, 'light': l.light},
-            (value) => controller.updateSettings({'themeMode': value}),
-          ),
-          _choice(
-            context,
-            l.league,
-            settings['league']?.toString() ?? 'Standard',
-            {for (final league in controller.leagues) league: league},
-            (value) => controller.updateSettings({'league': value}),
-          ),
-          _choice(
-            context,
-            l.priceRefresh,
-            '${settings['priceCacheMinutes'] ?? 30}',
-            {
-              for (final value in [5, 15, 30, 60, 120])
-                '$value': '$value ${l.minutes}',
-            },
-            (value) => controller.updateSettings({
-              'priceCacheMinutes': int.parse(value),
-            }),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _group(context, l.overlayMode, [
-          _choice(
-            context,
-            l.overlayMode,
-            settings['overlayMode']?.toString() ?? 'floating',
-            {'floating': l.floating, 'minimal': l.minimal},
-            (value) => controller.updateSettings({'overlayMode': value}),
-          ),
-          _choice(
-            context,
-            l.windowAppearance,
-            overlayWindowStyle(settings['overlayWindowStyle']),
-            {'frameless': l.framelessWindow, 'normal': l.normalWindow},
-            (value) => controller.updateSettings({'overlayWindowStyle': value}),
-          ),
-          _toggle(
-            context,
-            l.alwaysOnTop,
-            settings['alwaysOnTop'] as bool? ?? true,
-            (value) => controller.updateSettings({'alwaysOnTop': value}),
-          ),
-          _toggle(
-            context,
-            l.clickThrough,
-            settings['clickThrough'] as bool? ?? false,
-            (value) => controller.updateSettings({'clickThrough': value}),
-          ),
-          _toggle(
-            context,
-            l.frostedGlass,
-            settings['frostedGlass'] as bool? ?? true,
-            (value) => controller.updateSettings({'frostedGlass': value}),
-          ),
-          _toggle(
-            context,
-            l.transparentOverlayBorder,
-            settings['transparentOverlayBorder'] as bool? ?? false,
-            (value) =>
-                controller.updateSettings({'transparentOverlayBorder': value}),
-          ),
-          _scaleSlider(
-            context,
-            l.floatingFontSize,
-            (settings['floatingFontScale'] as num?)?.toDouble() ?? 1,
-            (value) => controller.updateSettings({'floatingFontScale': value}),
-          ),
-          _scaleSlider(
-            context,
-            l.minimalFontSize,
-            (settings['minimalFontScale'] as num?)?.toDouble() ?? 1,
-            (value) => controller.updateSettings({'minimalFontScale': value}),
-          ),
-          _scaleSlider(
-            context,
-            l.mainFontSize,
-            (settings['mainFontScale'] as num?)?.toDouble() ?? 1,
-            (value) => controller.updateSettings({'mainFontScale': value}),
-          ),
-          _toggle(
-            context,
-            l.pickupNotifications,
-            settings['pickupToastsEnabled'] as bool? ?? true,
-            (value) =>
-                controller.updateSettings({'pickupToastsEnabled': value}),
-          ),
-          _choice(
-            context,
-            l.maxVisiblePickups,
-            '${settings['pickupToastMaxVisible'] ?? 3}',
-            {for (var value = 1; value <= 10; value++) '$value': '$value'},
-            (value) => controller.updateSettings({
-              'pickupToastMaxVisible': int.parse(value),
-            }),
-          ),
-          _choice(
-            context,
-            l.pickupDisplayDuration,
-            '${settings['pickupToastDurationSeconds'] ?? 2.5}',
-            {
-              for (final value in [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10])
-                '$value': '$value ${l.seconds}',
-            },
-            (value) => controller.updateSettings({
-              'pickupToastDurationSeconds': double.parse(value),
-            }),
-          ),
-          _slider(
-            context,
-            l.textOpacity,
-            (settings['textOpacity'] as num?)?.toDouble() ?? 1,
-            (value) => controller.updateSettings({'textOpacity': value}),
-          ),
-          _slider(
-            context,
-            l.backgroundOpacity,
-            (settings['backgroundOpacity'] as num?)?.toDouble() ?? .94,
-            (value) => controller.updateSettings({'backgroundOpacity': value}),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                FButton(
-                  onPress: onShowOverlay,
-                  mainAxisSize: MainAxisSize.min,
-                  prefix: const AppSvg('overlay', color: Color(0xFF181A20)),
-                  child: Text(l.showOverlay),
-                ),
-                FButton(
-                  onPress: onShowRecentLoot,
-                  mainAxisSize: MainAxisSize.min,
-                  prefix: const AppSvg('loot', color: Color(0xFF181A20)),
-                  child: Text(l.previewPickupNotifications),
-                ),
-              ],
-            ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _group(context, l.tracking, [
-          Row(
+          child: Column(
             children: [
-              Expanded(
-                child: Text(
-                  controller.snapshot.trackingPaused
-                      ? l.pause
-                      : l.trackingActive,
-                  style: TextStyle(
-                    color: controller.snapshot.trackingPaused
-                        ? tradingRed
-                        : tradingGreen,
-                    fontWeight: FontWeight.w600,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 20, 14, 12),
+                child: TextField(
+                  controller: searchController,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: l.searchSettings,
+                    prefixIcon: const Padding(
+                      padding: EdgeInsets.all(11),
+                      child: AppSvg('search', size: 16),
+                    ),
+                    prefixIconConstraints: const BoxConstraints(minWidth: 38),
+                    suffixIcon: searchController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              searchController.clear();
+                              setState(() {});
+                            },
+                            icon: const AppSvg('close', size: 14),
+                          ),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ),
-              FButton(
-                onPress: controller.pauseOrResume,
-                variant: FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                child: Text(
-                  controller.snapshot.trackingPaused ? l.resume : l.pause,
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    return _CategoryTab(
+                      icon: category.$3,
+                      label: category.$2,
+                      selected:
+                          searchController.text.isEmpty &&
+                          selectedCategory == category.$1,
+                      onTap: () {
+                        searchController.clear();
+                        setState(() => selectedCategory = category.$1);
+                      },
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(width: 10),
-              FButton(
-                onPress: onNewSession,
-                mainAxisSize: MainAxisSize.min,
-                child: Text(l.newSession),
               ),
             ],
           ),
-          _toggle(
-            context,
-            l.confirmNewSession,
-            settings['confirmNewSession'] as bool? ?? true,
-            (value) => controller.updateSettings({'confirmNewSession': value}),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _group(context, l.closeWindowTitle, [
-          _choice(
-            context,
-            l.closeBehavior,
-            settings['closeAction']?.toString() ?? '',
-            {
-              '': l.askEveryTime,
-              'overlay': l.minimizeToOverlay,
-              'exit': l.exitApp,
-            },
-            (value) => controller.updateSettings({'closeAction': value}),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _group(context, l.updates, [
-          _choice(
-            context,
-            l.updateSource,
-            controller.updateSource,
-            {
-              'cdn': l.updateSourceCdn,
-              'native': l.updateSourceNative,
-              'custom': l.updateSourceCustom,
-            },
-            (value) => controller.updateSettings({'updateSource': value}),
-          ),
-          if (controller.updateSource == 'cdn')
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                l.updateCdnHint(defaultUpdateCdnPrefix),
-                style: TextStyle(
-                  color: context.colors.mutedForeground,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          if (controller.updateSource == 'custom')
-            _CustomUpdateCdn(controller: controller),
-          const Divider(height: 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 22, 28, 32),
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l.currentVersion(appVersionFull)),
-                    const SizedBox(height: 4),
-                    Text(
-                      _updateStatus(l),
-                      style: TextStyle(
-                        color: controller.updatePhase == UpdatePhase.failed
-                            ? tradingRed
-                            : context.colors.mutedForeground,
-                        fontSize: 12,
+              Text(
+                searchController.text.isEmpty
+                    ? categories
+                          .firstWhere((item) => item.$1 == selectedCategory)
+                          .$2
+                    : l.settingsSearchResults,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 16),
+              if (!hasSearchResults)
+                Padding(
+                  padding: const EdgeInsets.only(top: 48),
+                  child: Center(
+                    child: Text(
+                      l.noSettingsFound,
+                      style: TextStyle(color: context.colors.mutedForeground),
+                    ),
+                  ),
+                ),
+              if (show(_SettingsCategory.general, [
+                l.generalSettings,
+                l.language,
+                l.theme,
+                l.mainFontSize,
+                l.gameSettings,
+                l.league,
+                l.priceRefresh,
+                l.applicationBehavior,
+                l.closeBehavior,
+              ]))
+                _group(context, l.generalSettings, [
+                  _choice(
+                    context,
+                    l.language,
+                    settings['language']?.toString() == 'zh'
+                        ? 'zh'
+                        : settings['language']?.toString() == 'en'
+                        ? 'en'
+                        : '',
+                    {'': l.systemDefault, 'en': l.english, 'zh': l.chinese},
+                    (value) => controller.updateSettings({'language': value}),
+                  ),
+                  _choice(
+                    context,
+                    l.theme,
+                    settings['themeMode']?.toString() ?? 'dark',
+                    {
+                      'system': l.systemDefault,
+                      'dark': l.dark,
+                      'light': l.light,
+                    },
+                    (value) => controller.updateSettings({'themeMode': value}),
+                  ),
+                  _subheading(context, l.gameSettings),
+                  _choice(
+                    context,
+                    l.league,
+                    settings['league']?.toString() ?? 'Standard',
+                    {for (final league in controller.leagues) league: league},
+                    (value) => controller.updateSettings({'league': value}),
+                  ),
+                  _choice(
+                    context,
+                    l.priceRefresh,
+                    '${settings['priceCacheMinutes'] ?? 30}',
+                    {
+                      for (final value in [5, 15, 30, 60, 120])
+                        '$value': '$value ${l.minutes}',
+                    },
+                    (value) => controller.updateSettings({
+                      'priceCacheMinutes': int.parse(value),
+                    }),
+                  ),
+                  _subheading(context, l.typographySettings),
+                  _scaleSlider(
+                    context,
+                    l.mainFontSize,
+                    (settings['mainFontScale'] as num?)?.toDouble() ?? 1,
+                    (value) =>
+                        controller.updateSettings({'mainFontScale': value}),
+                  ),
+                  _subheading(context, l.applicationBehavior),
+                  _choice(
+                    context,
+                    l.closeBehavior,
+                    settings['closeAction']?.toString() ?? '',
+                    {
+                      '': l.askEveryTime,
+                      'overlay': l.minimizeToOverlay,
+                      'exit': l.exitApp,
+                    },
+                    (value) =>
+                        controller.updateSettings({'closeAction': value}),
+                  ),
+                ]),
+              if (show(_SettingsCategory.overlay, [
+                l.overlaySettings,
+                l.overlayMode,
+                l.floating,
+                l.minimal,
+                l.windowBehavior,
+                l.windowAppearance,
+                l.alwaysOnTop,
+                l.clickThrough,
+                l.appearanceSettings,
+                l.frostedGlass,
+                l.transparentOverlayBorder,
+                l.textOpacity,
+                l.backgroundOpacity,
+                l.frostedGlassGlow,
+                l.frostedGlassOpacity,
+                l.frostedGlassBlur,
+                l.typographySettings,
+                l.floatingFontSize,
+                l.minimalFontSize,
+                l.showOverlay,
+              ])) ...[
+                _group(context, l.overlayMode, [
+                  _choice(
+                    context,
+                    l.overlayMode,
+                    settings['overlayMode']?.toString() ?? 'floating',
+                    {'floating': l.floating, 'minimal': l.minimal},
+                    (value) =>
+                        controller.updateSettings({'overlayMode': value}),
+                  ),
+                  _subheading(context, l.windowBehavior),
+                  _choice(
+                    context,
+                    l.windowAppearance,
+                    overlayWindowStyle(settings['overlayWindowStyle']),
+                    {'frameless': l.framelessWindow, 'normal': l.normalWindow},
+                    (value) => controller.updateSettings({
+                      'overlayWindowStyle': value,
+                    }),
+                  ),
+                  _toggle(
+                    context,
+                    l.alwaysOnTop,
+                    settings['alwaysOnTop'] as bool? ?? true,
+                    (value) =>
+                        controller.updateSettings({'alwaysOnTop': value}),
+                  ),
+                  _toggle(
+                    context,
+                    l.clickThrough,
+                    settings['clickThrough'] as bool? ?? false,
+                    (value) =>
+                        controller.updateSettings({'clickThrough': value}),
+                  ),
+                  _subheading(context, l.appearanceSettings),
+                  _toggle(
+                    context,
+                    l.frostedGlass,
+                    frostedGlass,
+                    (value) =>
+                        controller.updateSettings({'frostedGlass': value}),
+                  ),
+                  if (frostedGlass) ...[
+                    _slider(
+                      context,
+                      l.frostedGlassOpacity,
+                      (settings['frostedGlassOpacity'] as num?)?.toDouble() ??
+                          .7,
+                      (value) => controller.updateSettings({
+                        'frostedGlassOpacity': value,
+                      }),
+                    ),
+                    _slider(
+                      context,
+                      l.frostedGlassBlur,
+                      (settings['frostedGlassBlur'] as num?)?.toDouble() ?? .65,
+                      (value) => controller.updateSettings({
+                        'frostedGlassBlur': value,
+                      }),
+                    ),
+                    _slider(
+                      context,
+                      l.frostedGlassGlow,
+                      (settings['frostedGlassGlow'] as num?)?.toDouble() ?? .5,
+                      (value) => controller.updateSettings({
+                        'frostedGlassGlow': value,
+                      }),
+                    ),
+                  ] else
+                    _slider(
+                      context,
+                      l.backgroundOpacity,
+                      (settings['backgroundOpacity'] as num?)?.toDouble() ??
+                          .94,
+                      (value) => controller.updateSettings({
+                        'backgroundOpacity': value,
+                      }),
+                    ),
+                  _slider(
+                    context,
+                    l.textOpacity,
+                    (settings['textOpacity'] as num?)?.toDouble() ?? 1,
+                    (value) =>
+                        controller.updateSettings({'textOpacity': value}),
+                  ),
+                  _toggle(
+                    context,
+                    l.transparentOverlayBorder,
+                    settings['transparentOverlayBorder'] as bool? ?? false,
+                    (value) => controller.updateSettings({
+                      'transparentOverlayBorder': value,
+                    }),
+                  ),
+                  _subheading(context, l.typographySettings),
+                  _scaleSlider(
+                    context,
+                    l.floatingFontSize,
+                    (settings['floatingFontScale'] as num?)?.toDouble() ?? 1,
+                    (value) =>
+                        controller.updateSettings({'floatingFontScale': value}),
+                  ),
+                  _scaleSlider(
+                    context,
+                    l.minimalFontSize,
+                    (settings['minimalFontScale'] as num?)?.toDouble() ?? 1,
+                    (value) =>
+                        controller.updateSettings({'minimalFontScale': value}),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        FButton(
+                          onPress: onShowOverlay,
+                          mainAxisSize: MainAxisSize.min,
+                          prefix: const AppSvg(
+                            'overlay',
+                            color: Color(0xFF181A20),
+                          ),
+                          child: Text(l.showOverlay),
+                        ),
+                      ],
+                    ),
+                  ),
+                ]),
+              ],
+              if (show(_SettingsCategory.notifications, [
+                l.notificationSettings,
+                l.pickupNotifications,
+                l.maxVisiblePickups,
+                l.pickupDisplayDuration,
+                l.previewPickupNotifications,
+              ]))
+                _group(context, l.notificationSettings, [
+                  _toggle(
+                    context,
+                    l.pickupNotifications,
+                    settings['pickupToastsEnabled'] as bool? ?? true,
+                    (value) => controller.updateSettings({
+                      'pickupToastsEnabled': value,
+                    }),
+                  ),
+                  _choice(
+                    context,
+                    l.maxVisiblePickups,
+                    '${settings['pickupToastMaxVisible'] ?? 3}',
+                    {
+                      for (var value = 1; value <= 10; value++)
+                        '$value': '$value',
+                    },
+                    (value) => controller.updateSettings({
+                      'pickupToastMaxVisible': int.parse(value),
+                    }),
+                  ),
+                  _choice(
+                    context,
+                    l.pickupDisplayDuration,
+                    '${settings['pickupToastDurationSeconds'] ?? 2.5}',
+                    {
+                      for (final value in [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10])
+                        '$value': '$value ${l.seconds}',
+                    },
+                    (value) => controller.updateSettings({
+                      'pickupToastDurationSeconds': double.parse(value),
+                    }),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FButton(
+                      onPress: onShowRecentLoot,
+                      mainAxisSize: MainAxisSize.min,
+                      prefix: const AppSvg('loot', color: Color(0xFF181A20)),
+                      child: Text(l.previewPickupNotifications),
+                    ),
+                  ),
+                ]),
+              if (show(_SettingsCategory.tracking, [
+                l.trackingSettings,
+                l.tracking,
+                l.pause,
+                l.resume,
+                l.newSession,
+                l.confirmNewSession,
+              ]))
+                _group(context, l.tracking, [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          controller.snapshot.trackingPaused
+                              ? l.pause
+                              : l.trackingActive,
+                          style: TextStyle(
+                            color: controller.snapshot.trackingPaused
+                                ? tradingRed
+                                : tradingGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      FButton(
+                        onPress: controller.pauseOrResume,
+                        variant: FButtonVariant.outline,
+                        mainAxisSize: MainAxisSize.min,
+                        child: Text(
+                          controller.snapshot.trackingPaused
+                              ? l.resume
+                              : l.pause,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      FButton(
+                        onPress: onNewSession,
+                        mainAxisSize: MainAxisSize.min,
+                        child: Text(l.newSession),
+                      ),
+                    ],
+                  ),
+                  _toggle(
+                    context,
+                    l.confirmNewSession,
+                    settings['confirmNewSession'] as bool? ?? true,
+                    (value) =>
+                        controller.updateSettings({'confirmNewSession': value}),
+                  ),
+                ]),
+              if (show(_SettingsCategory.data, [
+                l.dataSettings,
+                l.databaseManagement,
+                l.resetDatabase,
+                l.resetDatabaseHint,
+              ]))
+                _group(context, l.databaseManagement, [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l.resetDatabaseHint,
+                          style: TextStyle(
+                            color: context.colors.mutedForeground,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      FButton(
+                        onPress: onResetDatabase,
+                        variant: FButtonVariant.outline,
+                        mainAxisSize: MainAxisSize.min,
+                        child: Text(
+                          l.resetDatabase,
+                          style: const TextStyle(color: tradingRed),
+                        ),
+                      ),
+                    ],
+                  ),
+                ]),
+              if (show(_SettingsCategory.updates, [
+                l.updateSettings,
+                l.updates,
+                l.updateSource,
+                l.updateSourceCdn,
+                l.updateSourceNative,
+                l.updateSourceCustom,
+                l.currentVersion(appVersion),
+                l.checkForUpdates,
+                l.forceOverwriteUpdate,
+              ]))
+                _group(context, l.updates, [
+                  _choice(
+                    context,
+                    l.updateSource,
+                    controller.updateSource,
+                    {
+                      'cdn': l.updateSourceCdn,
+                      'native': l.updateSourceNative,
+                      'custom': l.updateSourceCustom,
+                    },
+                    (value) =>
+                        controller.updateSettings({'updateSource': value}),
+                  ),
+                  if (controller.updateSource == 'cdn')
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        l.updateCdnHint(defaultUpdateCdnPrefix),
+                        style: TextStyle(
+                          color: context.colors.mutedForeground,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                  ],
+                  if (controller.updateSource == 'custom')
+                    _CustomUpdateCdn(controller: controller),
+                  const Divider(height: 20),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l.currentVersion(appVersionFull)),
+                            const SizedBox(height: 4),
+                            Text(
+                              _updateStatus(l),
+                              style: TextStyle(
+                                color:
+                                    controller.updatePhase == UpdatePhase.failed
+                                    ? tradingRed
+                                    : context.colors.mutedForeground,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          FButton(
+                            onPress: _updateBusy
+                                ? null
+                                : controller.updatePhase ==
+                                      UpdatePhase.available
+                                ? controller.installAvailableUpdate
+                                : controller.checkForUpdates,
+                            variant:
+                                controller.updatePhase == UpdatePhase.available
+                                ? FButtonVariant.primary
+                                : FButtonVariant.outline,
+                            mainAxisSize: MainAxisSize.min,
+                            child: Text(
+                              controller.updatePhase == UpdatePhase.available
+                                  ? controller.isInstalledEdition
+                                        ? l.downloadAndInstall
+                                        : l.openReleasePage
+                                  : l.checkForUpdates,
+                            ),
+                          ),
+                          FButton(
+                            onPress: _updateBusy
+                                ? null
+                                : controller.forceInstallLatestUpdate,
+                            variant: FButtonVariant.outline,
+                            mainAxisSize: MainAxisSize.min,
+                            child: Text(
+                              controller.isInstalledEdition
+                                  ? l.forceOverwriteUpdate
+                                  : l.openLatestRelease,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    controller.isInstalledEdition
+                        ? l.forceOverwriteUpdateHint
+                        : l.portableUpdateHint,
+                    style: TextStyle(
+                      color: context.colors.mutedForeground,
+                      fontSize: 12,
+                    ),
+                  ),
+                ]),
+              if (show(_SettingsCategory.advanced, [
+                l.advancedSettings,
+                l.offsetSettings,
+                l.playerInventory,
+                l.entity,
+                l.components,
+                l.itemOffsets,
+              ]))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _OffsetSettings(controller: controller),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.end,
-                children: [
-                  FButton(
-                    onPress: _updateBusy
-                        ? null
-                        : controller.updatePhase == UpdatePhase.available
-                        ? controller.installAvailableUpdate
-                        : controller.checkForUpdates,
-                    variant: controller.updatePhase == UpdatePhase.available
-                        ? FButtonVariant.primary
-                        : FButtonVariant.outline,
-                    mainAxisSize: MainAxisSize.min,
-                    child: Text(
-                      controller.updatePhase == UpdatePhase.available
-                          ? controller.isInstalledEdition
-                                ? l.downloadAndInstall
-                                : l.openReleasePage
-                          : l.checkForUpdates,
-                    ),
-                  ),
-                  FButton(
-                    onPress: _updateBusy
-                        ? null
-                        : controller.forceInstallLatestUpdate,
-                    variant: FButtonVariant.outline,
-                    mainAxisSize: MainAxisSize.min,
-                    child: Text(
-                      controller.isInstalledEdition
-                          ? l.forceOverwriteUpdate
-                          : l.openLatestRelease,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            controller.isInstalledEdition
-                ? l.forceOverwriteUpdateHint
-                : l.portableUpdateHint,
-            style: TextStyle(
-              color: context.colors.mutedForeground,
-              fontSize: 12,
-            ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _OffsetSettings(controller: controller),
+        ),
       ],
     );
   }
 
   Widget _group(BuildContext context, String title, List<Widget> children) =>
-      AppCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionTitle(title),
-            const SizedBox(height: 8),
-            ...children,
-          ],
+      Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionTitle(title),
+              const SizedBox(height: 8),
+              ...children,
+            ],
+          ),
         ),
       );
+
+  Widget _subheading(BuildContext context, String label) => Padding(
+    padding: const EdgeInsets.only(top: 14, bottom: 4),
+    child: Text(
+      label,
+      style: TextStyle(
+        color: context.colors.mutedForeground,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 
   Widget _toggle(
     BuildContext context,
@@ -506,6 +869,55 @@ class SettingsTab extends StatelessWidget {
     UpdatePhase.installerOpened => l.installerOpened,
     UpdatePhase.failed => l.updateCheckFailed(controller.updateError ?? ''),
   };
+}
+
+class _CategoryTab extends StatelessWidget {
+  const _CategoryTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Material(
+      color: selected ? brandYellow.withValues(alpha: .14) : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              AppSvg(
+                icon,
+                size: 18,
+                color: selected ? brandYellow : context.colors.mutedForeground,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? brandYellow : null,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _CustomUpdateCdn extends StatefulWidget {

@@ -54,6 +54,39 @@ Future<bool> confirmUpdateAvailable(
       false;
 }
 
+Future<bool> confirmDatabaseReset(
+  BuildContext context, {
+  required bool corrupted,
+}) async {
+  final l = AppLocalizations.of(context);
+  return await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: context.colors.card,
+          title: Text(
+            corrupted ? l.databaseCorruptedTitle : l.resetDatabaseTitle,
+          ),
+          content: Text(
+            corrupted ? l.databaseCorruptedBody : l.resetDatabaseBody,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(
+                l.deleteDatabaseAndRestart,
+                style: const TextStyle(color: tradingRed),
+              ),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+}
+
 /// Keeps update progress visible after the startup prompt starts the download.
 Future<void> showUpdateProgress(
   BuildContext context, {

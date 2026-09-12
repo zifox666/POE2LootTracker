@@ -18,12 +18,8 @@ namespace {
 constexpr UINT_PTR kHoverTimerId = 0x504F4532;
 constexpr UINT kHoverIntervalMs = 40;
 
-// The overlay's frosted glass is drawn by Flutter itself (lib/widgets/frosted_glass.dart) and no
-// longer asks Windows for a composition material. Two reasons, both observed on this project's own
-// overlay window: SetWindowCompositionAttribute only ever produced an opaque black plate on a
-// layered child window with per-pixel alpha instead of the desktop behind it, and the newer
-// DWMWA_SYSTEMBACKDROP_TYPE path is Windows 11 only and equally unreliable for that window class.
-//
+// Keep this HWND on window_manager's transparent layered-window path. Frost is painted by Flutter;
+// changing the DWM backdrop or accent policy here breaks the overlay's per-pixel transparency.
 // DWMWA_BORDER_COLOR is not in every SDK header this project builds against, so it is defined here
 // by its documented value. Only Windows 11 honours it; older versions ignore the call, which is why
 // the Flutter-drawn border is hidden independently of it.

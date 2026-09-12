@@ -133,6 +133,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get searchSettings => 'Search settings';
+
+  @override
+  String get settingsSearchResults => 'Search results';
+
+  @override
+  String get noSettingsFound => 'No matching settings';
+
+  @override
+  String get generalSettings => 'General';
+
+  @override
+  String get overlaySettings => 'Overlay';
+
+  @override
+  String get notificationSettings => 'Notifications';
+
+  @override
+  String get trackingSettings => 'Tracking';
+
+  @override
+  String get dataSettings => 'Data';
+
+  @override
+  String get updateSettings => 'Updates';
+
+  @override
+  String get advancedSettings => 'Advanced';
+
+  @override
+  String get gameSettings => 'Game and prices';
+
+  @override
+  String get applicationBehavior => 'Application behavior';
+
+  @override
+  String get windowBehavior => 'Window behavior';
+
+  @override
+  String get appearanceSettings => 'Appearance';
+
+  @override
+  String get typographySettings => 'Text size';
+
+  @override
   String get currentSession => 'Current session';
 
   @override
@@ -337,7 +382,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundOpacity => 'Background opacity';
 
   @override
-  String get frostedGlass => 'Frosted glass';
+  String get frostedGlass => 'Frosted glass (experimental)';
+
+  @override
+  String get frostedGlassGlow => 'Glow intensity';
+
+  @override
+  String get frostedGlassOpacity => 'Glass background opacity';
+
+  @override
+  String get frostedGlassBlur => 'Blur intensity';
+
+  @override
+  String get databaseManagement => 'Database';
+
+  @override
+  String get resetDatabase => 'Reset database';
+
+  @override
+  String get resetDatabaseHint =>
+      'Delete all tracking history, settings, and market cache stored in the database, then restart the app.';
+
+  @override
+  String get resetDatabaseTitle => 'Reset database?';
+
+  @override
+  String get resetDatabaseBody =>
+      'This permanently deletes all tracking history, settings, and market cache stored in the database, then restarts the app. This cannot be undone.';
+
+  @override
+  String get databaseCorruptedTitle => 'Database corrupted';
+
+  @override
+  String get databaseCorruptedBody =>
+      'The tracking service cannot start because the database is corrupted. Delete the entire database and restart the app? All tracking history and settings will be permanently lost.';
+
+  @override
+  String get deleteDatabaseAndRestart => 'Delete and restart';
 
   @override
   String get transparentOverlayBorder => 'Transparent overlay border';
