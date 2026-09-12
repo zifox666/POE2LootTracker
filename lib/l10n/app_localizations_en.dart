@@ -455,6 +455,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadAndInstall => 'Download and install';
 
   @override
+  String get forceOverwriteUpdate => 'Force overwrite update';
+
+  @override
+  String get forceOverwriteUpdateHint =>
+      'Downloads and reinstalls the latest release even when its version matches the current app. Intended for updater testing.';
+
+  @override
   String get updateDialogTitle => 'Update available';
 
   @override

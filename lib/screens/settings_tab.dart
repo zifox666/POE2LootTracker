@@ -262,23 +262,46 @@ class SettingsTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              FButton(
-                onPress: _updateBusy
-                    ? null
-                    : controller.updatePhase == UpdatePhase.available
-                    ? controller.installAvailableUpdate
-                    : controller.checkForUpdates,
-                variant: controller.updatePhase == UpdatePhase.available
-                    ? FButtonVariant.primary
-                    : FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                child: Text(
-                  controller.updatePhase == UpdatePhase.available
-                      ? l.downloadAndInstall
-                      : l.checkForUpdates,
-                ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.end,
+                children: [
+                  FButton(
+                    onPress: _updateBusy
+                        ? null
+                        : controller.updatePhase == UpdatePhase.available
+                        ? controller.installAvailableUpdate
+                        : controller.checkForUpdates,
+                    variant: controller.updatePhase == UpdatePhase.available
+                        ? FButtonVariant.primary
+                        : FButtonVariant.outline,
+                    mainAxisSize: MainAxisSize.min,
+                    child: Text(
+                      controller.updatePhase == UpdatePhase.available
+                          ? l.downloadAndInstall
+                          : l.checkForUpdates,
+                    ),
+                  ),
+                  FButton(
+                    onPress: _updateBusy
+                        ? null
+                        : controller.forceInstallLatestUpdate,
+                    variant: FButtonVariant.outline,
+                    mainAxisSize: MainAxisSize.min,
+                    child: Text(l.forceOverwriteUpdate),
+                  ),
+                ],
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.forceOverwriteUpdateHint,
+            style: TextStyle(
+              color: context.colors.mutedForeground,
+              fontSize: 12,
+            ),
           ),
         ]),
         const SizedBox(height: 16),

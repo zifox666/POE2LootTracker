@@ -950,6 +950,18 @@ abstract class AppLocalizations {
   /// **'Download and install'**
   String get downloadAndInstall;
 
+  /// No description provided for @forceOverwriteUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Force overwrite update'**
+  String get forceOverwriteUpdate;
+
+  /// No description provided for @forceOverwriteUpdateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads and reinstalls the latest release even when its version matches the current app. Intended for updater testing.'**
+  String get forceOverwriteUpdateHint;
+
   /// No description provided for @updateDialogTitle.
   ///
   /// In en, this message translates to:

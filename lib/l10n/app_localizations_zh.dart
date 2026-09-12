@@ -449,6 +449,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadAndInstall => '下载并安装';
 
   @override
+  String get forceOverwriteUpdate => '强制覆盖更新';
+
+  @override
+  String get forceOverwriteUpdateHint => '即使版本相同，也会重新下载并覆盖安装最新正式版，用于测试更新器。';
+
+  @override
   String get updateDialogTitle => '发现新版本';
 
   @override

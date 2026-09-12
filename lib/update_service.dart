@@ -95,10 +95,12 @@ class SemanticVersion implements Comparable<SemanticVersion> {
 UpdateRelease? parseLatestRelease(
   Map<String, dynamic> json, {
   required String currentVersion,
+  bool allowCurrentVersion = false,
 }) {
   final tag = json['tag_name']?.toString() ?? '';
   final latest = SemanticVersion.parse(tag);
-  if (latest.compareTo(SemanticVersion.parse(currentVersion)) <= 0) {
+  final comparison = latest.compareTo(SemanticVersion.parse(currentVersion));
+  if (comparison < 0 || (comparison == 0 && !allowCurrentVersion)) {
     return null;
   }
 
@@ -152,6 +154,7 @@ class UpdateService {
     String currentVersion, {
     String source = 'cdn',
     String customCdn = '',
+    bool allowCurrentVersion = false,
   }) async {
     final response = await _get(
       resolveUpdateUrl(
@@ -179,6 +182,7 @@ class UpdateService {
     return parseLatestRelease(
       value.cast<String, dynamic>(),
       currentVersion: currentVersion,
+      allowCurrentVersion: allowCurrentVersion,
     );
   }
 
@@ -308,8 +312,9 @@ class UpdateService {
     }
 
     final marker = File('${work.path}\\installer-started');
-    for (var attempt = 0; attempt < 40 && !await marker.exists(); attempt++) {
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+    final startupDeadline = DateTime.now().add(const Duration(seconds: 15));
+    while (!await marker.exists() && DateTime.now().isBefore(startupDeadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
     }
     if (!await marker.exists()) {
       Process.killPid(installerPid);

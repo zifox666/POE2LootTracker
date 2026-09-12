@@ -155,7 +155,10 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> checkForUpdates({bool silent = false}) async {
+  Future<void> checkForUpdates({
+    bool silent = false,
+    bool allowCurrentVersion = false,
+  }) async {
     if (updatePhase == UpdatePhase.checking ||
         updatePhase == UpdatePhase.downloading ||
         updatePhase == UpdatePhase.installing) {
@@ -169,6 +172,7 @@ class AppController extends ChangeNotifier {
         appVersion,
         source: updateSource,
         customCdn: customUpdateCdn,
+        allowCurrentVersion: allowCurrentVersion,
       );
       updatePhase = availableUpdate == null
           ? UpdatePhase.upToDate
@@ -179,6 +183,13 @@ class AppController extends ChangeNotifier {
       if (silent) debugPrint('update check failed: $exception');
     }
     notifyListeners();
+  }
+
+  Future<void> forceInstallLatestUpdate() async {
+    await checkForUpdates(allowCurrentVersion: true);
+    if (updatePhase == UpdatePhase.available) {
+      await installAvailableUpdate();
+    }
   }
 
   Future<void> installAvailableUpdate() async {

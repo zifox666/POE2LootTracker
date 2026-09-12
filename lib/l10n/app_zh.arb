@@ -154,6 +154,8 @@
   "updateAvailable": "发现新版本 {version}。",
   "@updateAvailable": { "placeholders": { "version": { "type": "String" } } },
   "downloadAndInstall": "下载并安装",
+  "forceOverwriteUpdate": "强制覆盖更新",
+  "forceOverwriteUpdateHint": "即使版本相同，也会重新下载并覆盖安装最新正式版，用于测试更新器。",
   "updateDialogTitle": "发现新版本",
   "updateDialogBody": "新版本 {version} 已可用。现在下载并安装吗？应用会自动关闭并重新启动。",
   "@updateDialogBody": { "placeholders": { "version": { "type": "String" } } },

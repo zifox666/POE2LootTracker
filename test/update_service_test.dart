@@ -93,6 +93,16 @@ void main() {
       );
     });
 
+    test('can return the current release for a forced reinstall', () {
+      final release = parseLatestRelease(
+        _release('v1.2.3'),
+        currentVersion: '1.2.3',
+        allowCurrentVersion: true,
+      );
+
+      expect(release?.version, '1.2.3');
+    });
+
     test('rejects a newer release without its checksum', () {
       final json = _release('v2.0.0');
       (json['assets'] as List).removeLast();

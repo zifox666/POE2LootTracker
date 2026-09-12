@@ -110,6 +110,7 @@ void main() {
     expect(find.text('CDN（推荐）'), findsOneWidget);
     expect(find.text('当前版本 $appVersionFull'), findsOneWidget);
     expect(find.text('检查更新'), findsWidgets);
+    expect(find.text('强制覆盖更新'), findsOneWidget);
     controller.dispose();
   });
 

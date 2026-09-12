@@ -154,6 +154,8 @@
   "updateAvailable": "Version {version} is available.",
   "@updateAvailable": { "placeholders": { "version": { "type": "String" } } },
   "downloadAndInstall": "Download and install",
+  "forceOverwriteUpdate": "Force overwrite update",
+  "forceOverwriteUpdateHint": "Downloads and reinstalls the latest release even when its version matches the current app. Intended for updater testing.",
   "updateDialogTitle": "Update available",
   "updateDialogBody": "Version {version} is available. Download and install it now? The app will close and restart automatically.",
   "@updateDialogBody": { "placeholders": { "version": { "type": "String" } } },
