@@ -70,7 +70,10 @@ void main() {
   testWidgets('settings show the current version and update control', (
     tester,
   ) async {
-    final controller = AppController(startHost: false);
+    final controller = AppController(
+      startHost: false,
+      updateService: UpdateService(installedEdition: true),
+    );
     final theme = buildForuiTheme(true);
     await tester.pumpWidget(
       MaterialApp(
@@ -145,9 +148,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('发现新版本'), findsOneWidget);
-    expect(find.text('新版本 1.2.0 已可用。现在下载并安装吗？应用会自动关闭并重新启动。'), findsOneWidget);
+    expect(find.text('新版本 1.2.0 已可用。现在下载并打开安装程序吗？'), findsOneWidget);
     expect(find.text('稍后'), findsOneWidget);
     expect(find.text('下载并安装'), findsOneWidget);
+  });
+
+  testWidgets('portable updates direct the user to the release page', (
+    tester,
+  ) async {
+    final theme = buildForuiTheme(true);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...FLocalizations.localizationsDelegates,
+        ],
+        theme: theme.toApproximateMaterialTheme(),
+        builder: (context, child) => FTheme(
+          data: theme,
+          platform: FPlatformVariant.macOS,
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => confirmUpdateAvailable(
+              context,
+              version: '1.2.0',
+              installedEdition: false,
+            ),
+            child: const Text('show portable update'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('show portable update'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('新版本 1.2.0 已可用。是否打开 GitHub Release 页面下载便携版？'),
+      findsOneWidget,
+    );
+    expect(find.text('打开下载页面'), findsOneWidget);
   });
 
   testWidgets('shows download progress after accepting the startup update', (
@@ -206,13 +250,15 @@ void main() {
 final _testRelease = UpdateRelease(
   version: '1.2.0',
   tag: 'v1.2.0',
-  archiveUrl: Uri.parse('https://example.test/release.zip'),
-  checksumUrl: Uri.parse('https://example.test/release.zip.sha256'),
+  installerUrl: Uri.parse('https://example.test/release-setup.exe'),
+  checksumUrl: Uri.parse('https://example.test/release-setup.exe.sha256'),
   releasePage: Uri.parse('https://example.test/release'),
   notes: '',
 );
 
 class _ProgressUpdateService extends UpdateService {
+  _ProgressUpdateService() : super(installedEdition: true);
+
   final started = Completer<void>();
   final finish = Completer<void>();
 

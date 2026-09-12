@@ -462,11 +462,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Downloads and reinstalls the latest release even when its version matches the current app. Intended for updater testing.';
 
   @override
+  String get openLatestRelease => 'Open latest release';
+
+  @override
+  String get openReleasePage => 'Open download page';
+
+  @override
+  String get portableUpdateHint =>
+      'Portable editions open the latest GitHub Release so you can download and replace the files manually.';
+
+  @override
   String get updateDialogTitle => 'Update available';
 
   @override
   String updateDialogBody(String version) {
-    return 'Version $version is available. Download and install it now? The app will close and restart automatically.';
+    return 'Version $version is available. Download and open the installer now?';
+  }
+
+  @override
+  String portableUpdateDialogBody(String version) {
+    return 'Version $version is available. Open its GitHub Release page to download the portable edition?';
   }
 
   @override
@@ -478,8 +493,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get installingUpdate =>
-      'Installing update; the app will restart shortly...';
+  String get installingUpdate => 'Opening the update installer...';
+
+  @override
+  String get installerOpened =>
+      'The installer is open. Follow it to complete the update.';
 
   @override
   String updateCheckFailed(String message) {

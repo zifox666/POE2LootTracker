@@ -70,7 +70,7 @@ void main() {
   });
 
   group('parseLatestRelease', () {
-    test('returns the matching Windows archive for a newer version', () {
+    test('returns the matching Windows installer for a newer version', () {
       final release = parseLatestRelease(
         _release('v1.3.0'),
         currentVersion: '1.2.9',
@@ -78,8 +78,8 @@ void main() {
 
       expect(release, isNotNull);
       expect(release!.version, '1.3.0');
-      expect(release.archiveUrl.path, endsWith('.zip'));
-      expect(release.checksumUrl.path, endsWith('.zip.sha256'));
+      expect(release.installerUrl.path, endsWith('-setup.exe'));
+      expect(release.checksumUrl.path, endsWith('-setup.exe.sha256'));
     });
 
     test('does not offer the current or an older version', () {
@@ -116,19 +116,19 @@ void main() {
 }
 
 Map<String, dynamic> _release(String tag) {
-  final archive = 'POE2LootTracker-$tag-windows-x64.zip';
+  final installer = 'POE2LootTracker-$tag-windows-x64-setup.exe';
   return {
     'tag_name': tag,
     'html_url': 'https://github.com/zifox666/POE2LootTracker/releases/tag/$tag',
     'body': 'Release notes',
     'assets': [
       {
-        'name': archive,
-        'browser_download_url': 'https://example.test/$archive',
+        'name': installer,
+        'browser_download_url': 'https://example.test/$installer',
       },
       {
-        'name': '$archive.sha256',
-        'browser_download_url': 'https://example.test/$archive.sha256',
+        'name': '$installer.sha256',
+        'browser_download_url': 'https://example.test/$installer.sha256',
       },
     ],
   };

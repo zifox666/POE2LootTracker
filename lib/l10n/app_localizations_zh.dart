@@ -455,11 +455,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forceOverwriteUpdateHint => '即使版本相同，也会重新下载并覆盖安装最新正式版，用于测试更新器。';
 
   @override
+  String get openLatestRelease => '打开最新发布页';
+
+  @override
+  String get openReleasePage => '打开下载页面';
+
+  @override
+  String get portableUpdateHint => '便携版会打开 GitHub 最新 Release 页面，请手动下载并替换文件。';
+
+  @override
   String get updateDialogTitle => '发现新版本';
 
   @override
   String updateDialogBody(String version) {
-    return '新版本 $version 已可用。现在下载并安装吗？应用会自动关闭并重新启动。';
+    return '新版本 $version 已可用。现在下载并打开安装程序吗？';
+  }
+
+  @override
+  String portableUpdateDialogBody(String version) {
+    return '新版本 $version 已可用。是否打开 GitHub Release 页面下载便携版？';
   }
 
   @override
@@ -471,7 +485,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get installingUpdate => '正在安装更新，应用即将重启…';
+  String get installingUpdate => '正在打开更新安装程序…';
+
+  @override
+  String get installerOpened => '安装程序已打开，请按提示完成更新。';
 
   @override
   String updateCheckFailed(String message) {

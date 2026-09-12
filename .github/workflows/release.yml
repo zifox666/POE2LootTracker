@@ -49,7 +49,7 @@ jobs:
       - name: Build Windows application
         run: flutter build windows --release
 
-      - name: Package release and checksum
+      - name: Package installer, portable edition, and checksums
         id: package
         shell: pwsh
         run: |
@@ -58,21 +58,47 @@ jobs:
             throw "Windows release output was not found at $releaseDirectory"
           }
 
-          $assetName = "POE2LootTracker-$env:GITHUB_REF_NAME-windows-x64.zip"
-          $assetPath = Join-Path $env:RUNNER_TEMP $assetName
-          Compress-Archive -Path (Join-Path $releaseDirectory '*') -DestinationPath $assetPath -CompressionLevel Optimal
+          $portableName = "POE2LootTracker-$env:GITHUB_REF_NAME-windows-x64-portable.zip"
+          $portablePath = Join-Path $env:RUNNER_TEMP $portableName
+          Compress-Archive -Path (Join-Path $releaseDirectory '*') -DestinationPath $portablePath -CompressionLevel Optimal
 
-          $checksumPath = "$assetPath.sha256"
-          $hash = (Get-FileHash -LiteralPath $assetPath -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  $assetName" | Set-Content -LiteralPath $checksumPath -Encoding ascii
+          $env:POE2_APP_VERSION = $env:GITHUB_REF_NAME.TrimStart('v')
+          $env:POE2_RELEASE_DIRECTORY = $releaseDirectory
+          $env:POE2_INSTALLER_OUTPUT = $env:RUNNER_TEMP
+          $env:POE2_INSTALLER_BASENAME = "POE2LootTracker-$env:GITHUB_REF_NAME-windows-x64-setup"
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path -LiteralPath $iscc)) {
+            throw "Inno Setup compiler was not found at $iscc"
+          }
+          & $iscc (Join-Path $env:GITHUB_WORKSPACE 'packaging\windows\installer.iss')
+          if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup failed with exit code $LASTEXITCODE"
+          }
 
-          "asset_path=$assetPath" >> $env:GITHUB_OUTPUT
-          "checksum_path=$checksumPath" >> $env:GITHUB_OUTPUT
+          $setupPath = Join-Path $env:RUNNER_TEMP "$env:POE2_INSTALLER_BASENAME.exe"
+          if (-not (Test-Path -LiteralPath $setupPath)) {
+            throw "Windows installer was not found at $setupPath"
+          }
+
+          $portableChecksumPath = "$portablePath.sha256"
+          $portableHash = (Get-FileHash -LiteralPath $portablePath -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$portableHash  $portableName" | Set-Content -LiteralPath $portableChecksumPath -Encoding ascii
+
+          $setupChecksumPath = "$setupPath.sha256"
+          $setupHash = (Get-FileHash -LiteralPath $setupPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$setupHash  $([IO.Path]::GetFileName($setupPath))" | Set-Content -LiteralPath $setupChecksumPath -Encoding ascii
+
+          "portable_path=$portablePath" >> $env:GITHUB_OUTPUT
+          "portable_checksum_path=$portableChecksumPath" >> $env:GITHUB_OUTPUT
+          "setup_path=$setupPath" >> $env:GITHUB_OUTPUT
+          "setup_checksum_path=$setupChecksumPath" >> $env:GITHUB_OUTPUT
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          ASSET_PATH: ${{ steps.package.outputs.asset_path }}
-          CHECKSUM_PATH: ${{ steps.package.outputs.checksum_path }}
+          PORTABLE_PATH: ${{ steps.package.outputs.portable_path }}
+          PORTABLE_CHECKSUM_PATH: ${{ steps.package.outputs.portable_checksum_path }}
+          SETUP_PATH: ${{ steps.package.outputs.setup_path }}
+          SETUP_CHECKSUM_PATH: ${{ steps.package.outputs.setup_checksum_path }}
         shell: pwsh
-        run: gh release create $env:GITHUB_REF_NAME $env:ASSET_PATH $env:CHECKSUM_PATH --verify-tag --generate-notes --title $env:GITHUB_REF_NAME
+        run: gh release create $env:GITHUB_REF_NAME $env:SETUP_PATH $env:SETUP_CHECKSUM_PATH $env:PORTABLE_PATH $env:PORTABLE_CHECKSUM_PATH --verify-tag --generate-notes --title $env:GITHUB_REF_NAME

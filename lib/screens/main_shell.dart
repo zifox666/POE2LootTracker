@@ -173,9 +173,7 @@ class _TitleBar extends StatelessWidget {
                                       UpdatePhase.available &&
                                   controller.availableUpdate != null) ...[
                                 const SizedBox(width: 6),
-                                _UpdateBadge(
-                                  onTap: () => _openUpdate(context),
-                                ),
+                                _UpdateBadge(onTap: () => _openUpdate(context)),
                               ],
                             ],
                           ),
@@ -186,10 +184,7 @@ class _TitleBar extends StatelessWidget {
                 ),
               ),
             ),
-            _HeaderStatus(
-              label: l.season,
-              value: controller.leagueName,
-            ),
+            _HeaderStatus(label: l.season, value: controller.leagueName),
             _HeaderStatus(
               label: l.onlinePlayers,
               value: _formatPlayerCount(controller.onlinePlayers),
@@ -228,9 +223,14 @@ class _TitleBar extends StatelessWidget {
     final install = await confirmUpdateAvailable(
       context,
       version: release.version,
+      installedEdition: controller.isInstalledEdition,
     );
     if (install && context.mounted) {
-      await showUpdateProgress(context, controller: controller);
+      if (controller.isInstalledEdition) {
+        await showUpdateProgress(context, controller: controller);
+      } else {
+        await controller.installAvailableUpdate();
+      }
     }
   }
 }
@@ -264,11 +264,7 @@ class _UpdateBadge extends StatelessWidget {
 }
 
 class _HeaderStatus extends StatelessWidget {
-  const _HeaderStatus({
-    required this.label,
-    required this.value,
-    this.accent,
-  });
+  const _HeaderStatus({required this.label, required this.value, this.accent});
 
   final String label;
   final String value;
@@ -307,9 +303,10 @@ class _HeaderStatus extends StatelessWidget {
 
 String _formatPlayerCount(int? value) {
   if (value == null) return '—';
-  return value
-      .toString()
-      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+  return value.toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ',',
+  );
 }
 
 class _TitleAction extends StatelessWidget {

@@ -34,7 +34,7 @@ class UpdateRelease {
   const UpdateRelease({
     required this.version,
     required this.tag,
-    required this.archiveUrl,
+    required this.installerUrl,
     required this.checksumUrl,
     required this.releasePage,
     required this.notes,
@@ -42,7 +42,7 @@ class UpdateRelease {
 
   final String version;
   final String tag;
-  final Uri archiveUrl;
+  final Uri installerUrl;
   final Uri checksumUrl;
   final Uri releasePage;
   final String notes;
@@ -104,9 +104,9 @@ UpdateRelease? parseLatestRelease(
     return null;
   }
 
-  final archiveName = 'POE2LootTracker-$tag-windows-x64.zip';
-  final checksumName = '$archiveName.sha256';
-  Uri? archiveUrl;
+  final installerName = 'POE2LootTracker-$tag-windows-x64-setup.exe';
+  final checksumName = '$installerName.sha256';
+  Uri? installerUrl;
   Uri? checksumUrl;
   final assets = json['assets'];
   if (assets is List) {
@@ -117,13 +117,13 @@ UpdateRelease? parseLatestRelease(
       final rawUrl = asset['browser_download_url']?.toString() ?? '';
       final url = Uri.tryParse(rawUrl);
       if (url == null || !url.hasScheme) continue;
-      if (name == archiveName) archiveUrl = url;
+      if (name == installerName) installerUrl = url;
       if (name == checksumName) checksumUrl = url;
     }
   }
-  if (archiveUrl == null || checksumUrl == null) {
+  if (installerUrl == null || checksumUrl == null) {
     throw UpdateException(
-      'Release $tag is missing $archiveName or its SHA-256 file.',
+      'Release $tag is missing $installerName or its SHA-256 file.',
     );
   }
 
@@ -134,7 +134,7 @@ UpdateRelease? parseLatestRelease(
   return UpdateRelease(
     version: latest.toString(),
     tag: tag,
-    archiveUrl: archiveUrl,
+    installerUrl: installerUrl,
     checksumUrl: checksumUrl,
     releasePage: page,
     notes: json['body']?.toString() ?? '',
@@ -142,13 +142,24 @@ UpdateRelease? parseLatestRelease(
 }
 
 class UpdateService {
-  UpdateService({HttpClient? client, Uri? latestReleaseEndpoint})
-    : _client = client ?? HttpClient(),
-      _latestReleaseEndpoint =
-          latestReleaseEndpoint ?? Uri.parse(_latestReleaseUrl);
+  UpdateService({
+    HttpClient? client,
+    Uri? latestReleaseEndpoint,
+    bool? installedEdition,
+  }) : _client = client ?? HttpClient(),
+       _latestReleaseEndpoint =
+           latestReleaseEndpoint ?? Uri.parse(_latestReleaseUrl),
+       _installedEdition = installedEdition;
 
   final HttpClient _client;
   final Uri _latestReleaseEndpoint;
+  final bool? _installedEdition;
+
+  bool get isInstalledEdition =>
+      _installedEdition ??
+      File(
+        '${File(Platform.resolvedExecutable).parent.path}\\installed.marker',
+      ).existsSync();
 
   Future<UpdateRelease?> checkForUpdate(
     String currentVersion, {
@@ -193,11 +204,11 @@ class UpdateService {
     void Function(int received, int total)? onProgress,
   }) async {
     final work = await Directory.systemTemp.createTemp(
-      'poe2-loot-tracker-update-',
+      'poe2-loot-tracker-setup-',
     );
     try {
       final checksumFile = File('${work.path}\\release.sha256');
-      final archiveFile = File('${work.path}\\release.zip');
+      final installerFile = File('${work.path}\\setup.exe');
       await _download(
         resolveUpdateUrl(
           release.checksumUrl,
@@ -208,11 +219,11 @@ class UpdateService {
       );
       await _download(
         resolveUpdateUrl(
-          release.archiveUrl,
+          release.installerUrl,
           source: source,
           customCdn: customCdn,
         ),
-        archiveFile,
+        installerFile,
         onProgress: onProgress,
       );
 
@@ -223,7 +234,7 @@ class UpdateService {
       if (expected == null) {
         throw const UpdateException('The release SHA-256 file is invalid.');
       }
-      final actual = (await sha256.bind(archiveFile.openRead()).first)
+      final actual = (await sha256.bind(installerFile.openRead()).first)
           .toString();
       if (actual != expected) {
         throw const UpdateException(
@@ -231,18 +242,11 @@ class UpdateService {
         );
       }
 
-      final executable = File(Platform.resolvedExecutable);
-      final script = File('${work.path}\\install-update.ps1');
-      await script.writeAsString(
-        _renderUpdaterScript(
-          processId: pid,
-          workDirectory: work.path,
-          archivePath: archiveFile.path,
-          installDirectory: executable.parent.path,
-          executableName: executable.uri.pathSegments.last,
-        ),
+      await Process.start(
+        installerFile.path,
+        const [],
+        mode: ProcessStartMode.detached,
       );
-      await _launchUpdater(script, work);
     } catch (_) {
       if (await work.exists()) await work.delete(recursive: true);
       rethrow;
@@ -283,109 +287,11 @@ class UpdateService {
     }
   }
 
+  Future<void> openReleasePage(UpdateRelease release) async {
+    await Process.start('explorer.exe', [
+      release.releasePage.toString(),
+    ], mode: ProcessStartMode.detached);
+  }
+
   void close() => _client.close(force: true);
-
-  Future<void> _launchUpdater(File script, Directory work) async {
-    final commandLine =
-        'powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden '
-        '-ExecutionPolicy Bypass -File "${script.path}"';
-    final escapedCommandLine = commandLine.replaceAll("'", "''");
-    final bootstrap =
-        "\$result = Invoke-CimMethod -ClassName Win32_Process -MethodName Create "
-        "-Arguments @{ CommandLine = '$escapedCommandLine' }; "
-        'if (\$result.ReturnValue -ne 0) { '
-        'throw "Win32_Process.Create failed: \$(\$result.ReturnValue)" }; '
-        '\$result.ProcessId';
-    final result = await Process.run('powershell.exe', [
-      '-NoLogo',
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      bootstrap,
-    ]);
-    final installerPid = int.tryParse(result.stdout.toString().trim());
-    if (result.exitCode != 0 || installerPid == null) {
-      final detail = result.stderr.toString().trim();
-      throw UpdateException(
-        'Unable to start the update installer${detail.isEmpty ? '.' : ': $detail'}',
-      );
-    }
-
-    final marker = File('${work.path}\\installer-started');
-    final startupDeadline = DateTime.now().add(const Duration(seconds: 15));
-    while (!await marker.exists() && DateTime.now().isBefore(startupDeadline)) {
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-    }
-    if (!await marker.exists()) {
-      Process.killPid(installerPid);
-      throw const UpdateException('The update installer did not start.');
-    }
-  }
-}
-
-String _powerShellQuote(String value) => "'${value.replaceAll("'", "''")}'";
-
-String _renderUpdaterScript({
-  required int processId,
-  required String workDirectory,
-  required String archivePath,
-  required String installDirectory,
-  required String executableName,
-}) {
-  final work = _powerShellQuote(workDirectory);
-  final archive = _powerShellQuote(archivePath);
-  final install = _powerShellQuote(installDirectory);
-  final executable = _powerShellQuote(executableName);
-  return '''
-\$ErrorActionPreference = 'Stop'
-\$appProcessId = $processId
-\$workDirectory = $work
-\$archivePath = $archive
-\$installDirectory = $install
-\$executableName = $executable
-\$stageDirectory = Join-Path \$workDirectory 'staged'
-\$errorLog = Join-Path \$env:TEMP 'POE2LootTracker-update-error.log'
-Set-Content -LiteralPath (Join-Path \$workDirectory 'installer-started') -Value \$PID
-
-try {
-  while (Get-Process -Id \$appProcessId -ErrorAction SilentlyContinue) {
-    Start-Sleep -Milliseconds 250
-  }
-  Expand-Archive -LiteralPath \$archivePath -DestinationPath \$stageDirectory -Force
-  if (-not (Test-Path -LiteralPath (Join-Path \$stageDirectory \$executableName))) {
-    throw 'The update archive does not contain the application executable.'
-  }
-  Copy-Item -Path (Join-Path \$stageDirectory '*') -Destination \$installDirectory -Recurse -Force
-  Start-Process -FilePath (Join-Path \$installDirectory \$executableName) -WorkingDirectory \$installDirectory
-
-  # The updater cannot recursively delete the directory that contains the running script. Remove
-  # the large cache files now, then let a tiny script outside that directory finish the cleanup
-  # after this process exits.
-  Remove-Item -LiteralPath \$archivePath -Force -ErrorAction SilentlyContinue
-  Remove-Item -LiteralPath (Join-Path \$workDirectory 'release.sha256') -Force -ErrorAction SilentlyContinue
-  Remove-Item -LiteralPath \$stageDirectory -Recurse -Force -ErrorAction SilentlyContinue
-  \$cleanupScript = Join-Path \$env:TEMP ("POE2LootTracker-cleanup-{0}.ps1" -f \$PID)
-  @'
-\$updaterProcessId = [int]\$env:POE2_LOOT_TRACKER_UPDATER_PID
-\$targetDirectory = \$env:POE2_LOOT_TRACKER_UPDATE_DIR
-while (Get-Process -Id \$updaterProcessId -ErrorAction SilentlyContinue) {
-  Start-Sleep -Milliseconds 100
-}
-Remove-Item -LiteralPath \$targetDirectory -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -LiteralPath \$PSCommandPath -Force -ErrorAction SilentlyContinue
-'@ | Set-Content -LiteralPath \$cleanupScript -Encoding UTF8
-  \$env:POE2_LOOT_TRACKER_UPDATER_PID = [string]\$PID
-  \$env:POE2_LOOT_TRACKER_UPDATE_DIR = \$workDirectory
-  Start-Process -FilePath 'powershell.exe' -WindowStyle Hidden -ArgumentList @(
-    '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
-    '-File', ('"{0}"' -f \$cleanupScript)
-  )
-} catch {
-  \$_ | Out-String | Set-Content -LiteralPath \$errorLog -Encoding UTF8
-  \$installedExecutable = Join-Path \$installDirectory \$executableName
-  if (Test-Path -LiteralPath \$installedExecutable) {
-    Start-Process -FilePath \$installedExecutable -WorkingDirectory \$installDirectory
-  }
-}
-''';
 }

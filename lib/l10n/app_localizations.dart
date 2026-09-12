@@ -962,6 +962,24 @@ abstract class AppLocalizations {
   /// **'Downloads and reinstalls the latest release even when its version matches the current app. Intended for updater testing.'**
   String get forceOverwriteUpdateHint;
 
+  /// No description provided for @openLatestRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Open latest release'**
+  String get openLatestRelease;
+
+  /// No description provided for @openReleasePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open download page'**
+  String get openReleasePage;
+
+  /// No description provided for @portableUpdateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Portable editions open the latest GitHub Release so you can download and replace the files manually.'**
+  String get portableUpdateHint;
+
   /// No description provided for @updateDialogTitle.
   ///
   /// In en, this message translates to:
@@ -971,8 +989,14 @@ abstract class AppLocalizations {
   /// No description provided for @updateDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'Version {version} is available. Download and install it now? The app will close and restart automatically.'**
+  /// **'Version {version} is available. Download and open the installer now?'**
   String updateDialogBody(String version);
+
+  /// No description provided for @portableUpdateDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} is available. Open its GitHub Release page to download the portable edition?'**
+  String portableUpdateDialogBody(String version);
 
   /// No description provided for @later.
   ///
@@ -989,8 +1013,14 @@ abstract class AppLocalizations {
   /// No description provided for @installingUpdate.
   ///
   /// In en, this message translates to:
-  /// **'Installing update; the app will restart shortly...'**
+  /// **'Opening the update installer...'**
   String get installingUpdate;
+
+  /// No description provided for @installerOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'The installer is open. Follow it to complete the update.'**
+  String get installerOpened;
 
   /// No description provided for @updateCheckFailed.
   ///

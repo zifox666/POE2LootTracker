@@ -66,21 +66,19 @@ git push origin main --follow-tags
 1. 校验标签和项目版本一致。
 2. 执行 Flutter 静态检查、Flutter 测试和 .NET 测试。
 3. 构建完整 Windows x64 目录。
-4. 生成 `POE2LootTracker-vX.Y.Z-windows-x64.zip` 和对应 `.sha256`。
-5. 创建 GitHub Release、生成发行说明并上传两个文件。
+4. 生成 `POE2LootTracker-vX.Y.Z-windows-x64-setup.exe` 安装包和 `POE2LootTracker-vX.Y.Z-windows-x64-portable.zip` 便携包。
+5. 为两个产物分别生成 `.sha256`，创建 GitHub Release 并上传四个文件。
 
 工作流只接受已经推送的标签，不会移动或覆盖既有标签。
 
 ## 应用内更新
 
-主程序启动后会静默查询 GitHub 最新正式版，也可在“设置 → 软件更新”手动检查。发现新版本后：
+主程序启动后会静默查询 GitHub 最新正式版，也可在“设置 → 软件更新”手动检查。
 
-1. 下载完整 Windows x64 压缩包及 SHA-256 文件。
-2. 校验压缩包完整性。
-3. 启动独立更新脚本并关闭追踪进程和主程序。
-4. 更新脚本解压完整包、覆盖当前安装目录并重新启动应用。
+- 安装版会下载安装程序及其 SHA-256 文件，校验完成后打开安装向导。
+- 便携版不会自动覆盖文件；发现更新后会打开最新 GitHub Release 页面，由用户下载便携包并手动替换。
 
-更新失败时会保留当前可执行文件并尝试重新启动，错误详情写入系统临时目录下的 `POE2LootTracker-update-error.log`。这是便携版覆盖更新；请将程序放在当前用户有写权限的目录中。
+安装程序会请求管理员权限、提示关闭正在运行的应用，并保留 `%APPDATA%\POE2LootTracker` 中的用户数据和缓存。
 
 ## 许可证
 

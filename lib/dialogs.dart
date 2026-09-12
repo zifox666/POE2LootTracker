@@ -24,6 +24,7 @@ Future<void> showUsageWarning(BuildContext context, {required int seconds}) {
 Future<bool> confirmUpdateAvailable(
   BuildContext context, {
   required String version,
+  bool installedEdition = true,
 }) async {
   final l = AppLocalizations.of(context);
   return await showDialog<bool>(
@@ -31,7 +32,11 @@ Future<bool> confirmUpdateAvailable(
         builder: (dialogContext) => AlertDialog(
           backgroundColor: context.colors.card,
           title: Text(l.updateDialogTitle),
-          content: Text(l.updateDialogBody(version)),
+          content: Text(
+            installedEdition
+                ? l.updateDialogBody(version)
+                : l.portableUpdateDialogBody(version),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
@@ -39,7 +44,9 @@ Future<bool> confirmUpdateAvailable(
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l.downloadAndInstall),
+              child: Text(
+                installedEdition ? l.downloadAndInstall : l.openReleasePage,
+              ),
             ),
           ],
         ),
@@ -81,16 +88,18 @@ class _UpdateProgressDialogState extends State<_UpdateProgressDialog> {
       final phase = widget.controller.updatePhase;
       final percent = widget.controller.updateDownloadPercent;
       final failed = phase == UpdatePhase.failed;
+      final installerOpened = phase == UpdatePhase.installerOpened;
       final status = switch (phase) {
         UpdatePhase.downloading => l.downloadingUpdate(percent),
         UpdatePhase.installing => l.installingUpdate,
+        UpdatePhase.installerOpened => l.installerOpened,
         UpdatePhase.failed => l.updateCheckFailed(
           widget.controller.updateError ?? '',
         ),
         _ => l.downloadingUpdate(percent),
       };
       return PopScope(
-        canPop: failed,
+        canPop: failed || installerOpened,
         child: AlertDialog(
           backgroundColor: context.colors.card,
           title: Text(l.updateDialogTitle),
@@ -101,7 +110,7 @@ class _UpdateProgressDialogState extends State<_UpdateProgressDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(status),
-                if (!failed) ...[
+                if (!failed && !installerOpened) ...[
                   const SizedBox(height: 16),
                   LinearProgressIndicator(
                     value: phase == UpdatePhase.downloading && percent > 0
@@ -112,7 +121,7 @@ class _UpdateProgressDialogState extends State<_UpdateProgressDialog> {
               ],
             ),
           ),
-          actions: failed
+          actions: failed || installerOpened
               ? [
                   TextButton(
                     onPressed: () => Navigator.pop(context),

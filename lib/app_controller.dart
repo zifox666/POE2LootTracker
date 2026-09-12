@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -17,6 +16,7 @@ enum UpdatePhase {
   available,
   downloading,
   installing,
+  installerOpened,
   failed,
 }
 
@@ -92,6 +92,8 @@ class AppController extends ChangeNotifier {
   String get updateSource => settings['updateSource']?.toString() ?? 'cdn';
 
   String get customUpdateCdn => settings['customUpdateCdn']?.toString() ?? '';
+
+  bool get isInstalledEdition => updateService.isInstalledEdition;
 
   String get leagueName {
     final league = settings['league']?.toString().trim() ?? '';
@@ -195,6 +197,16 @@ class AppController extends ChangeNotifier {
   Future<void> installAvailableUpdate() async {
     final release = availableUpdate;
     if (release == null || updatePhase != UpdatePhase.available) return;
+    if (!isInstalledEdition) {
+      try {
+        await updateService.openReleasePage(release);
+      } catch (exception) {
+        updateError = exception.toString();
+        updatePhase = UpdatePhase.failed;
+        notifyListeners();
+      }
+      return;
+    }
     updatePhase = UpdatePhase.downloading;
     updateDownloadPercent = 0;
     updateError = null;
@@ -212,16 +224,8 @@ class AppController extends ChangeNotifier {
           notifyListeners();
         },
       );
-      updatePhase = UpdatePhase.installing;
+      updatePhase = UpdatePhase.installerOpened;
       notifyListeners();
-      if (startHost) {
-        try {
-          await host.dispose();
-        } catch (exception) {
-          debugPrint('update: closing tracker host failed: $exception');
-        }
-      }
-      exit(0);
     } catch (exception) {
       updateError = exception.toString();
       updatePhase = UpdatePhase.failed;

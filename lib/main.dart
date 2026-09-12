@@ -287,9 +287,14 @@ class _DesktopShellState extends State<_DesktopShell> {
     final install = await confirmUpdateAvailable(
       context,
       version: release.version,
+      installedEdition: widget.controller.isInstalledEdition,
     );
     if (install && mounted) {
-      await showUpdateProgress(context, controller: widget.controller);
+      if (widget.controller.isInstalledEdition) {
+        await showUpdateProgress(context, controller: widget.controller);
+      } else {
+        await widget.controller.installAvailableUpdate();
+      }
     }
   }
 

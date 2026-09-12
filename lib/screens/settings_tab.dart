@@ -279,7 +279,9 @@ class SettingsTab extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     child: Text(
                       controller.updatePhase == UpdatePhase.available
-                          ? l.downloadAndInstall
+                          ? controller.isInstalledEdition
+                                ? l.downloadAndInstall
+                                : l.openReleasePage
                           : l.checkForUpdates,
                     ),
                   ),
@@ -289,7 +291,11 @@ class SettingsTab extends StatelessWidget {
                         : controller.forceInstallLatestUpdate,
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
-                    child: Text(l.forceOverwriteUpdate),
+                    child: Text(
+                      controller.isInstalledEdition
+                          ? l.forceOverwriteUpdate
+                          : l.openLatestRelease,
+                    ),
                   ),
                 ],
               ),
@@ -297,7 +303,9 @@ class SettingsTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l.forceOverwriteUpdateHint,
+            controller.isInstalledEdition
+                ? l.forceOverwriteUpdateHint
+                : l.portableUpdateHint,
             style: TextStyle(
               color: context.colors.mutedForeground,
               fontSize: 12,
@@ -430,6 +438,7 @@ class SettingsTab extends StatelessWidget {
       controller.updateDownloadPercent,
     ),
     UpdatePhase.installing => l.installingUpdate,
+    UpdatePhase.installerOpened => l.installerOpened,
     UpdatePhase.failed => l.updateCheckFailed(controller.updateError ?? ''),
   };
 }
