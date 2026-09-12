@@ -34,6 +34,10 @@ class OverlayInteraction {
   Future<void> setAlwaysOnTop(bool enabled) =>
       _channel.invokeMethod<void>('setAlwaysOnTop', enabled);
 
+  /// Hides both the DWM frame border and the Flutter-drawn overlay border.
+  Future<void> setTransparentBorder(bool enabled) =>
+      _channel.invokeMethod<void>('setTransparentBorder', enabled);
+
   /// Shows this engine's own native window and confirms that Windows considers it visible.
   ///
   /// The owner waits for this acknowledgement before hiding the main window. This prevents a

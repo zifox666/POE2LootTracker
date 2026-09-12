@@ -333,6 +333,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backgroundOpacity => '背景透明度';
 
   @override
+  String get frostedGlass => '毛玻璃效果';
+
+  @override
+  String get transparentOverlayBorder => '小窗透明边框';
+
+  @override
+  String get floatingFontSize => '悬浮小窗字号';
+
+  @override
+  String get minimalFontSize => '极简模式字号';
+
+  @override
+  String get mainFontSize => '主界面字号';
+
+  @override
   String get priceRefresh => '价格刷新间隔';
 
   @override

@@ -11,6 +11,7 @@ import 'dialogs.dart';
 import 'l10n/app_localizations.dart';
 import 'overlay_interaction.dart';
 import 'widgets/common.dart';
+import 'widgets/frosted_glass.dart';
 
 Future<void> configureOverlayWindow() async {
   const options = WindowOptions(
@@ -79,6 +80,7 @@ class _OverlayApplicationState extends State<OverlayApplication>
   int restoreRequest = 0;
   bool? appliedClickThrough;
   bool? appliedAlwaysOnTop;
+  bool? appliedTransparentBorder;
   String? appliedWindowStyle;
   static const interaction = OverlayInteraction();
 
@@ -132,6 +134,16 @@ class _OverlayApplicationState extends State<OverlayApplication>
 
   void _changed() {
     final settings = app.settings;
+    final transparentBorder =
+        settings['transparentOverlayBorder'] as bool? ?? false;
+    if (transparentBorder != appliedTransparentBorder) {
+      appliedTransparentBorder = transparentBorder;
+      unawaited(
+        _windowOption(
+          () => interaction.setTransparentBorder(transparentBorder),
+        ),
+      );
+    }
     final windowStyle = overlayWindowStyle(settings['overlayWindowStyle']);
     if (windowStyle != appliedWindowStyle) {
       appliedWindowStyle = windowStyle;
@@ -300,8 +312,16 @@ class _OverlayApplicationState extends State<OverlayApplication>
       theme: theme.toApproximateMaterialTheme().copyWith(
         scaffoldBackgroundColor: Colors.transparent,
       ),
-      builder: (context, child) =>
+      builder: (context, child) {
+        final mode = app.settings['overlayMode'] == 'minimal'
+            ? 'minimal'
+            : 'floating';
+        return applyFontScale(
+          context,
+          fontScaleSetting(app.settings, '${mode}FontScale'),
           FTheme(data: theme, platform: FPlatformVariant.macOS, child: child!),
+        );
+      },
       home: Builder(
         builder: (context) => OverlaySurface(app: app, owner: owner),
       ),
@@ -330,6 +350,9 @@ class _OverlaySurfaceState extends State<OverlaySurface> {
         ((settings['textOpacity'] as num?)?.toDouble().clamp(0, 1) ?? 1)
             .toDouble();
     final minimalMode = settings['overlayMode'] == 'minimal';
+    final frostedGlass = settings['frostedGlass'] as bool? ?? true;
+    final transparentBorder =
+        settings['transparentOverlayBorder'] as bool? ?? false;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: MouseRegion(
@@ -346,28 +369,46 @@ class _OverlaySurfaceState extends State<OverlaySurface> {
                     // produced "A RenderFlex overflowed by 99 pixels on the bottom" -- and the
                     // floating layout needs this much height before it stops fitting.
                     final compact = minimalMode || constraints.maxHeight < 260;
+                    final radius = compact ? 8.0 : 12.0;
+                    final content = Opacity(
+                      opacity: textOpacity,
+                      child: compact
+                          ? MinimalOverlay(app: widget.app)
+                          : FloatingOverlay(
+                              app: widget.app,
+                              owner: widget.owner,
+                            ),
+                    );
+                    // The frosted plate is painted by this window itself, over a natively
+                    // transparent window: whatever the game draws behind it stays visible through
+                    // the tint, which is what no Windows-side material managed here. With the
+                    // effect off this is the flat panel the overlay always had.
+                    if (frostedGlass) {
+                      return FrostedGlassLayer(
+                        tint: context.colors.background,
+                        opacity: backgroundOpacity,
+                        radius: radius,
+                        showBorder: !transparentBorder,
+                        child: content,
+                      );
+                    }
                     return DecoratedBox(
                       decoration: BoxDecoration(
                         color: context.colors.background.withValues(
                           alpha: backgroundOpacity,
                         ),
                         border: Border.all(
-                          color: context.colors.border.withValues(
-                            alpha: backgroundOpacity,
-                          ),
-                        ),
-                        borderRadius: BorderRadius.circular(compact ? 8 : 12),
-                      ),
-                      child: ClipRect(
-                        child: Opacity(
-                          opacity: textOpacity,
-                          child: compact
-                              ? MinimalOverlay(app: widget.app)
-                              : FloatingOverlay(
-                                  app: widget.app,
-                                  owner: widget.owner,
+                          color: transparentBorder
+                              ? Colors.transparent
+                              : context.colors.border.withValues(
+                                  alpha: backgroundOpacity,
                                 ),
                         ),
+                        borderRadius: BorderRadius.circular(radius),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(radius),
+                        child: content,
                       ),
                     );
                   },

@@ -99,6 +99,37 @@ class SettingsTab extends StatelessWidget {
           ),
           _toggle(
             context,
+            l.frostedGlass,
+            settings['frostedGlass'] as bool? ?? true,
+            (value) => controller.updateSettings({'frostedGlass': value}),
+          ),
+          _toggle(
+            context,
+            l.transparentOverlayBorder,
+            settings['transparentOverlayBorder'] as bool? ?? false,
+            (value) =>
+                controller.updateSettings({'transparentOverlayBorder': value}),
+          ),
+          _scaleSlider(
+            context,
+            l.floatingFontSize,
+            (settings['floatingFontScale'] as num?)?.toDouble() ?? 1,
+            (value) => controller.updateSettings({'floatingFontScale': value}),
+          ),
+          _scaleSlider(
+            context,
+            l.minimalFontSize,
+            (settings['minimalFontScale'] as num?)?.toDouble() ?? 1,
+            (value) => controller.updateSettings({'minimalFontScale': value}),
+          ),
+          _scaleSlider(
+            context,
+            l.mainFontSize,
+            (settings['mainFontScale'] as num?)?.toDouble() ?? 1,
+            (value) => controller.updateSettings({'mainFontScale': value}),
+          ),
+          _toggle(
+            context,
             l.pickupNotifications,
             settings['pickupToastsEnabled'] as bool? ?? true,
             (value) =>
@@ -405,6 +436,40 @@ class SettingsTab extends StatelessWidget {
           width: 210,
           child: Slider(
             value: value.clamp(0, 1),
+            activeColor: brandYellow,
+            onChanged: onChanged,
+            onChangeEnd: onChanged,
+          ),
+        ),
+        SizedBox(
+          width: 48,
+          child: Text(
+            '${(value * 100).round()}%',
+            textAlign: TextAlign.right,
+            style: context.numberStyle,
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _scaleSlider(
+    BuildContext context,
+    String label,
+    double value,
+    ValueChanged<double> onChanged,
+  ) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 7),
+    child: Row(
+      children: [
+        Expanded(child: Text(label)),
+        SizedBox(
+          width: 210,
+          child: Slider(
+            value: value.clamp(.75, 1.5),
+            min: .75,
+            max: 1.5,
+            divisions: 15,
             activeColor: brandYellow,
             onChanged: onChanged,
             onChangeEnd: onChanged,

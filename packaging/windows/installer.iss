@@ -40,4 +40,4 @@ Name: "{autodesktop}\POE2 LootTracker"; Filename: "{app}\poe2_loot_tracker.exe";
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Run]
-Filename: "{app}\poe2_loot_tracker.exe"; Description: "{cm:LaunchProgram,POE2 LootTracker}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\poe2_loot_tracker.exe"; Description: "{cm:LaunchProgram,POE2 LootTracker}"; Flags: nowait postinstall skipifsilent runascurrentuser

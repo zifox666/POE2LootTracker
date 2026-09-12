@@ -337,6 +337,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundOpacity => 'Background opacity';
 
   @override
+  String get frostedGlass => 'Frosted glass';
+
+  @override
+  String get transparentOverlayBorder => 'Transparent overlay border';
+
+  @override
+  String get floatingFontSize => 'Floating overlay font size';
+
+  @override
+  String get minimalFontSize => 'Minimal mode font size';
+
+  @override
+  String get mainFontSize => 'Main interface font size';
+
+  @override
   String get priceRefresh => 'Price refresh interval';
 
   @override

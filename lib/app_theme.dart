@@ -10,6 +10,17 @@ const tradingRed = Color(0xFFF6465D);
 /// `assets/fonts` so the UI never depends on a system CJK font being installed.
 const appFontFamily = 'Source Han Sans SC';
 
+double fontScaleSetting(Map<String, dynamic> settings, String key) =>
+    ((settings[key] as num?)?.toDouble() ?? 1.0).clamp(0.75, 1.5).toDouble();
+
+Widget applyFontScale(BuildContext context, double scale, Widget child) =>
+    MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(scale)),
+      child: child,
+    );
+
 FThemeData buildForuiTheme(bool dark) {
   final colors = dark
       ? const FColors(

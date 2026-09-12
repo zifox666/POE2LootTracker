@@ -734,6 +734,36 @@ abstract class AppLocalizations {
   /// **'Background opacity'**
   String get backgroundOpacity;
 
+  /// No description provided for @frostedGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Frosted glass'**
+  String get frostedGlass;
+
+  /// No description provided for @transparentOverlayBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Transparent overlay border'**
+  String get transparentOverlayBorder;
+
+  /// No description provided for @floatingFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Floating overlay font size'**
+  String get floatingFontSize;
+
+  /// No description provided for @minimalFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal mode font size'**
+  String get minimalFontSize;
+
+  /// No description provided for @mainFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Main interface font size'**
+  String get mainFontSize;
+
   /// No description provided for @priceRefresh.
   ///
   /// In en, this message translates to:

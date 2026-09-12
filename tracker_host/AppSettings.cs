@@ -10,6 +10,11 @@ internal sealed class AppSettings
     public bool ClickThrough { get; set; }
     public string OverlayMode { get; set; } = "floating";
     public string OverlayWindowStyle { get; set; } = "frameless";
+    public double FloatingFontScale { get; set; } = 1.0;
+    public double MinimalFontScale { get; set; } = 1.0;
+    public double MainFontScale { get; set; } = 1.0;
+    public bool TransparentOverlayBorder { get; set; }
+    public bool FrostedGlass { get; set; } = true;
     public bool PickupToastsEnabled { get; set; } = true;
     public int PickupToastMaxVisible { get; set; } = 3;
     public double PickupToastDurationSeconds { get; set; } = 2.5;
@@ -78,6 +83,11 @@ internal sealed class AppSettings
         ClickThrough = value.ClickThrough;
         OverlayMode = value.OverlayMode;
         OverlayWindowStyle = value.OverlayWindowStyle;
+        FloatingFontScale = value.FloatingFontScale;
+        MinimalFontScale = value.MinimalFontScale;
+        MainFontScale = value.MainFontScale;
+        TransparentOverlayBorder = value.TransparentOverlayBorder;
+        FrostedGlass = value.FrostedGlass;
         PickupToastsEnabled = value.PickupToastsEnabled;
         PickupToastMaxVisible = value.PickupToastMaxVisible;
         PickupToastDurationSeconds = value.PickupToastDurationSeconds;
@@ -107,6 +117,11 @@ internal sealed class AppSettings
         ClickThrough = value.ClickThrough;
         OverlayMode = value.OverlayMode;
         OverlayWindowStyle = value.OverlayWindowStyle;
+        FloatingFontScale = value.FloatingFontScale;
+        MinimalFontScale = value.MinimalFontScale;
+        MainFontScale = value.MainFontScale;
+        TransparentOverlayBorder = value.TransparentOverlayBorder;
+        FrostedGlass = value.FrostedGlass;
         PickupToastsEnabled = value.PickupToastsEnabled;
         PickupToastMaxVisible = value.PickupToastMaxVisible;
         PickupToastDurationSeconds = value.PickupToastDurationSeconds;
@@ -174,6 +189,9 @@ internal sealed class AppSettings
         TextOpacity = Math.Clamp(TextOpacity, 0, 1);
         OverlayMode = OverlayMode == "minimal" ? "minimal" : "floating";
         OverlayWindowStyle = OverlayWindowStyle == "normal" ? "normal" : "frameless";
+        FloatingFontScale = Math.Clamp(FloatingFontScale, 0.75, 1.5);
+        MinimalFontScale = Math.Clamp(MinimalFontScale, 0.75, 1.5);
+        MainFontScale = Math.Clamp(MainFontScale, 0.75, 1.5);
         PickupToastMaxVisible = Math.Clamp(PickupToastMaxVisible, 1, 10);
         PickupToastDurationSeconds = Math.Clamp(PickupToastDurationSeconds, 1, 10);
         ThemeMode = ThemeMode is "light" or "dark" or "system" ? ThemeMode : "system";

@@ -1,5 +1,6 @@
 #include "overlay_interaction_plugin.h"
 
+#include <dwmapi.h>
 #include <windows.h>
 
 #include <flutter/encodable_value.h>
@@ -16,6 +17,22 @@ namespace {
 
 constexpr UINT_PTR kHoverTimerId = 0x504F4532;
 constexpr UINT kHoverIntervalMs = 40;
+
+// The overlay's frosted glass is drawn by Flutter itself (lib/widgets/frosted_glass.dart) and no
+// longer asks Windows for a composition material. Two reasons, both observed on this project's own
+// overlay window: SetWindowCompositionAttribute only ever produced an opaque black plate on a
+// layered child window with per-pixel alpha instead of the desktop behind it, and the newer
+// DWMWA_SYSTEMBACKDROP_TYPE path is Windows 11 only and equally unreliable for that window class.
+//
+// DWMWA_BORDER_COLOR is not in every SDK header this project builds against, so it is defined here
+// by its documented value. Only Windows 11 honours it; older versions ignore the call, which is why
+// the Flutter-drawn border is hidden independently of it.
+#ifndef DWMWA_BORDER_COLOR
+#define DWMWA_BORDER_COLOR 34
+#endif
+
+constexpr DWORD kDwmColorDefault = 0xFFFFFFFF;
+constexpr DWORD kDwmColorNone = 0xFFFFFFFE;
 
 double Number(const flutter::EncodableMap& arguments, const char* key) {
   const auto found = arguments.find(flutter::EncodableValue(key));
@@ -116,6 +133,21 @@ class OverlayInteractionPlugin : public flutter::Plugin {
                       "Windows could not update the overlay z-order");
         return;
       }
+      result->Success(flutter::EncodableValue(true));
+      return;
+    }
+
+    if (call.method_name() == "setTransparentBorder") {
+      const auto* enabled = std::get_if<bool>(call.arguments());
+      if (enabled == nullptr) {
+        result->Error("bad-arguments", "setTransparentBorder expects a boolean");
+        return;
+      }
+      const DWORD color = *enabled ? kDwmColorNone : kDwmColorDefault;
+      // DWMWA_BORDER_COLOR is supported by Windows 11. The Flutter border is still hidden on
+      // older versions, so lack of native support does not make the setting unusable.
+      ::DwmSetWindowAttribute(window_, DWMWA_BORDER_COLOR, &color,
+                              sizeof(color));
       result->Success(flutter::EncodableValue(true));
       return;
     }

@@ -154,10 +154,14 @@ class _MainApplicationState extends State<MainApplication> {
           ),
         ),
       ),
-      builder: (context, child) => FTheme(
-        data: theme,
-        platform: FPlatformVariant.macOS,
-        child: FTooltipGroup(child: child!),
+      builder: (context, child) => applyFontScale(
+        context,
+        fontScaleSetting(widget.controller.settings, 'mainFontScale'),
+        FTheme(
+          data: theme,
+          platform: FPlatformVariant.macOS,
+          child: FTooltipGroup(child: child!),
+        ),
       ),
       home: _DesktopShell(
         controller: widget.controller,
