@@ -165,6 +165,7 @@ internal sealed class LootTrackerEngine : IDisposable
         double currentProfit = this.current == null ? 0 : this.NetValue(this.current, currentGained);
         double totalProfit = 0;
         var totalTime = TimeSpan.Zero;
+        var sessionKills = new int[4];
 
         foreach (var run in this.runs)
         {
@@ -172,6 +173,10 @@ internal sealed class LootTrackerEngine : IDisposable
             var gained = isCurrent ? currentGained : run.Gained;
             totalProfit += isCurrent || run.FrozenProfitEx is null ? this.NetValue(run, gained) : run.FrozenProfitEx.Value;
             totalTime += isCurrent ? this.CurrentLiveTime() : run.ActiveTime;
+            for (int index = 0; index < sessionKills.Length && index < run.Kills.Length; index++)
+            {
+                sessionKills[index] += run.Kills[index];
+            }
         }
 
         double perHour = totalTime.TotalHours > 0 ? totalProfit / totalTime.TotalHours : 0;
@@ -220,7 +225,7 @@ internal sealed class LootTrackerEngine : IDisposable
             perHour,
             this.priceCache.DivineToExaltedRate,
             this.runs.Count,
-            this.current == null ? new int[4] : (int[])this.current.Kills.Clone(),
+            sessionKills,
             currentLoot,
             recentPickups,
             mapSummaries,

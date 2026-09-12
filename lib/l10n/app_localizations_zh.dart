@@ -159,6 +159,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mapTime => '图内时长';
 
   @override
+  String get totalMapTime => '总图内时长';
+
+  @override
   String get efficiency => '效率';
 
   @override
@@ -246,7 +249,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get season => '赛季';
 
   @override
-  String get onlinePlayers => '在线人数';
+  String get onlinePlayers => 'Steam 在线人数';
 
   @override
   String get syncStatus => '同步状态';

@@ -163,6 +163,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapTime => 'Map time';
 
   @override
+  String get totalMapTime => 'Total map time';
+
+  @override
   String get efficiency => 'Efficiency';
 
   @override
@@ -250,7 +253,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get season => 'Season';
 
   @override
-  String get onlinePlayers => 'Players online';
+  String get onlinePlayers => 'Steam players online';
 
   @override
   String get syncStatus => 'Sync status';

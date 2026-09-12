@@ -608,12 +608,25 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
                 const AppLogo(size: 20),
                 const SizedBox(width: 8),
                 Expanded(
+                  flex: 2,
                   child: Text(
                     s.mapName,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    widget.app.leagueName,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.colors.mutedForeground,
                     ),
                   ),
                 ),
@@ -656,8 +669,8 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
             children: [
               Expanded(
                 child: _OverlayTextMetric(
-                  label: l.mapTime,
-                  child: _LiveMapTime(app: widget.app, fontSize: 14),
+                  label: l.totalMapTime,
+                  value: formatDuration(s.activeTime),
                 ),
               ),
               Expanded(
@@ -679,6 +692,10 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
             spacing: 15,
             runSpacing: 8,
             children: [
+              _InlineLabel(
+                label: l.mapTime,
+                child: _LiveMapTime(app: widget.app, fontSize: 14),
+              ),
               IconCount(
                 icon: 'monster_normal',
                 count: s.kills[0],
@@ -976,10 +993,9 @@ class _OverlayMetric extends StatelessWidget {
 }
 
 class _OverlayTextMetric extends StatelessWidget {
-  const _OverlayTextMetric({required this.label, this.value, this.child});
+  const _OverlayTextMetric({required this.label, required this.value});
   final String label;
-  final String? value;
-  final Widget? child;
+  final String value;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -991,14 +1007,13 @@ class _OverlayTextMetric extends StatelessWidget {
         style: TextStyle(fontSize: 9, color: context.colors.mutedForeground),
       ),
       const SizedBox(height: 4),
-      child ??
-          Text(
-            value!,
-            style: context.numberStyle.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+      Text(
+        value,
+        style: context.numberStyle.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     ],
   );
 }

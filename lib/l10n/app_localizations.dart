@@ -386,6 +386,12 @@ abstract class AppLocalizations {
   /// **'Map time'**
   String get mapTime;
 
+  /// No description provided for @totalMapTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Total map time'**
+  String get totalMapTime;
+
   /// No description provided for @efficiency.
   ///
   /// In en, this message translates to:
@@ -563,7 +569,7 @@ abstract class AppLocalizations {
   /// No description provided for @onlinePlayers.
   ///
   /// In en, this message translates to:
-  /// **'Players online'**
+  /// **'Steam players online'**
   String get onlinePlayers;
 
   /// No description provided for @syncStatus.
