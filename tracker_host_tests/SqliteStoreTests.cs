@@ -119,6 +119,36 @@ public sealed class SqliteStoreTests
     }
 
     [Fact]
+    public void AddsEditableDefaultGroupsOnceAndKeepsZeroCostPresets()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "poe2-loottracker-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            using (var store = new SqliteStore(Path.Combine(directory, "test.sqlite3")))
+            {
+                store.SetSetting("application", """{"CostPresets":[]}""");
+
+                var migrated = AppSettings.Load(store);
+
+                Assert.Equal(3, migrated.CostPresets.Count);
+                Assert.All(migrated.CostPresets, preset => Assert.Equal(0, preset.Amount));
+                Assert.Contains(migrated.CostPresets, preset =>
+                    preset.Id == "builtin_free_maps" &&
+                    preset.MapNames.Contains("Atziri's Temple"));
+
+                migrated.CostPresets.Clear();
+                migrated.Save(store);
+                Assert.Empty(AppSettings.Load(store).CostPresets);
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
     public void PersistsAndReloadsMarketSnapshotFromSqlite()
     {
         string directory = Path.Combine(Path.GetTempPath(), "poe2-loottracker-tests", Guid.NewGuid().ToString("N"));

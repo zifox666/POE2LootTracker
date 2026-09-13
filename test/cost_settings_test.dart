@@ -9,7 +9,7 @@ import 'package:poe2_loot_tracker/widgets/common.dart';
 
 void main() {
   test('POE2DB map options join three languages by unique key', () {
-    expect(endgameMaps.length, 159);
+    expect(endgameMaps.length, 160);
     expect(
       endgameMaps.map((map) => map.key).toSet().length,
       endgameMaps.length,
@@ -27,6 +27,9 @@ void main() {
           .where((name) => name.contains('DNT-UNUSED')),
       isEmpty,
     );
+    final temple = mapOptionsForAliases(const ["Atziri's Temple"]).single;
+    expect(temple.key, 'IncursionTemple');
+    expect(temple.aliases, containsAll(['阿兹里神庙', '阿茲里的神廟']));
   });
 
   test('legacy single map settings migrate in the Flutter model', () {

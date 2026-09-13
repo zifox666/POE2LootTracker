@@ -40,7 +40,7 @@ class WindowCoordinator {
   /// "failed to find target window" -- a PlatformException on a future nobody awaited, which from
   /// the outside is indistinguishable from the button not being wired up at all. The reason is now
   /// pushed to [AppController.setError] so the shell can show it.
-  Future<bool> showOverlay() async {
+  Future<bool> showOverlay({bool hideMain = true}) async {
     try {
       var overlay = overlayWindow;
       if (overlay == null) {
@@ -71,12 +71,19 @@ class WindowCoordinator {
           'the overlay did not confirm that its window is visible',
         );
       }
-      await _hideMainWindow();
+      if (hideMain) await _hideMainWindow();
       return true;
     } catch (exception) {
       app.setError('overlay: $exception');
       return false;
     }
+  }
+
+  /// Shows the configured overlay while leaving the main window available for first-run setup.
+  Future<bool> previewOverlay() => showOverlay(hideMain: false);
+
+  Future<void> hideOverlay() async {
+    await overlayWindow?.hide();
   }
 
   /// A newly created Flutter engine may need a moment to install its Dart method handler. Waiting
@@ -119,7 +126,6 @@ class WindowCoordinator {
         }
         recentLootWindow = window;
       }
-      await window.show();
       if (!await _prepareWindow(window, 'recent loot')) {
         throw StateError('the recent-pickup window is not visible');
       }

@@ -80,7 +80,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get manualOnly => '未关联地图 · 仅供手动切换';
 
   @override
-  String get invalidCostPreset => '请输入成本名称和大于 0 的价格。';
+  String get invalidCostPreset => '请输入成本名称和大于或等于 0 的价格。';
 
   @override
   String get activeCost => '当前成本';
@@ -727,4 +727,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String itemsCount(int count) {
     return '$count 项';
   }
+
+  @override
+  String get welcomeTitle => '欢迎使用 POE2 Loot Tracker';
+
+  @override
+  String get welcomeSubtitle => '开始追踪前，请先完成必要设置。之后仍可在设置中随时修改。';
+
+  @override
+  String get welcomeAppearanceStep => '语言与外观';
+
+  @override
+  String get welcomeLeagueStep => '联赛选择';
+
+  @override
+  String get welcomeOverlayStep => '小窗设置';
+
+  @override
+  String get welcomeAppearanceTitle => '选择语言和外观';
+
+  @override
+  String get welcomeAppearanceHint => '语言和明暗模式会立即应用到整个程序。';
+
+  @override
+  String get welcomeLeagueTitle => '选择当前联赛';
+
+  @override
+  String get welcomeLeagueHint => '程序会使用所选联赛对应的市场价格。';
+
+  @override
+  String get welcomeOverlayTitle => '设置小窗';
+
+  @override
+  String get welcomeOverlayHint => '选择悬浮或极简模式，并在主界面保持显示时实时调节效果。';
+
+  @override
+  String get welcomeOverlayDragHint => '拖动已经显示的小窗到合适位置。需要再次拖动时，请先关闭点击穿透。';
+
+  @override
+  String get finishSetup => '完成设置';
 }

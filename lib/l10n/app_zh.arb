@@ -23,7 +23,7 @@
   "defaultCost": "默认成本",
   "defaultCostHint": "进图时没有匹配到其他成本时使用。",
   "manualOnly": "未关联地图 · 仅供手动切换",
-  "invalidCostPreset": "请输入成本名称和大于 0 的价格。",
+  "invalidCostPreset": "请输入成本名称和大于或等于 0 的价格。",
   "activeCost": "当前成本",
   "noCostPreset": "不扣成本",
   "manualCostFallback": "未匹配地图时手动使用",
@@ -248,5 +248,18 @@
   "mapLevel": "区域等级 {level}",
   "@mapLevel": { "placeholders": { "level": { "type": "int" } } },
   "itemsCount": "{count} 项",
-  "@itemsCount": { "placeholders": { "count": { "type": "int" } } }
+  "@itemsCount": { "placeholders": { "count": { "type": "int" } } },
+  "welcomeTitle": "欢迎使用 POE2 Loot Tracker",
+  "welcomeSubtitle": "开始追踪前，请先完成必要设置。之后仍可在设置中随时修改。",
+  "welcomeAppearanceStep": "语言与外观",
+  "welcomeLeagueStep": "联赛选择",
+  "welcomeOverlayStep": "小窗设置",
+  "welcomeAppearanceTitle": "选择语言和外观",
+  "welcomeAppearanceHint": "语言和明暗模式会立即应用到整个程序。",
+  "welcomeLeagueTitle": "选择当前联赛",
+  "welcomeLeagueHint": "程序会使用所选联赛对应的市场价格。",
+  "welcomeOverlayTitle": "设置小窗",
+  "welcomeOverlayHint": "选择悬浮或极简模式，并在主界面保持显示时实时调节效果。",
+  "welcomeOverlayDragHint": "拖动已经显示的小窗到合适位置。需要再次拖动时，请先关闭点击穿透。",
+  "finishSetup": "完成设置"
 }

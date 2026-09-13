@@ -38,6 +38,10 @@ class OverlayInteraction {
   Future<void> setTransparentBorder(bool enabled) =>
       _channel.invokeMethod<void>('setTransparentBorder', enabled);
 
+  /// Forces the Flutter child view to adopt the top-level window's current client size.
+  Future<void> refreshRenderSurface() =>
+      _channel.invokeMethod<void>('refreshRenderSurface');
+
   /// Shows this engine's own native window and confirms that Windows considers it visible.
   ///
   /// The owner waits for this acknowledgement before hiding the main window. This prevents a

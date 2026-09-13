@@ -553,6 +553,7 @@ const defaultSettings = <String, dynamic>{
   'league': 'Standard',
   'priceCacheMinutes': 30,
   'riskAcknowledged': false,
+  'welcomeCompleted': false,
   'confirmNewSession': true,
   'updateSource': 'cdn',
   'customUpdateCdn': '',

@@ -20,6 +20,7 @@ class EndgameMapOption {
 ///
 /// Repeated rows are collapsed and the explicit `[DNT-UNUSED]` entry is omitted.
 const endgameMaps = <EndgameMapOption>[
+  EndgameMapOption('IncursionTemple', '阿兹里神庙', '阿茲里的神廟', 'Atziri\'s Temple'),
   EndgameMapOption('Castaway', '颠沛领域', '漂流者之所', 'Castaway'),
   EndgameMapOption('Untainted_Paradise', '纯净乐园', '純淨樂園', 'Untainted Paradise'),
   EndgameMapOption('Vaults_of_Kamasa', '卡马萨的宝库', '卡瑪薩秘寶庫', 'Vaults of Kamasa'),

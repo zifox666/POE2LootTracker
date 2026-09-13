@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @invalidCostPreset.
   ///
   /// In en, this message translates to:
-  /// **'Enter a cost name and a price greater than zero.'**
+  /// **'Enter a cost name and a price greater than or equal to zero.'**
   String get invalidCostPreset;
 
   /// No description provided for @activeCost.
@@ -1477,6 +1477,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} items'**
   String itemsCount(int count);
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to POE2 Loot Tracker'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete these essentials before you start tracking. You can change them later in Settings.'**
+  String get welcomeSubtitle;
+
+  /// No description provided for @welcomeAppearanceStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Language and appearance'**
+  String get welcomeAppearanceStep;
+
+  /// No description provided for @welcomeLeagueStep.
+  ///
+  /// In en, this message translates to:
+  /// **'League'**
+  String get welcomeLeagueStep;
+
+  /// No description provided for @welcomeOverlayStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Overlay'**
+  String get welcomeOverlayStep;
+
+  /// No description provided for @welcomeAppearanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your language and appearance'**
+  String get welcomeAppearanceTitle;
+
+  /// No description provided for @welcomeAppearanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These choices apply immediately to the entire application.'**
+  String get welcomeAppearanceHint;
+
+  /// No description provided for @welcomeLeagueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your current league'**
+  String get welcomeLeagueTitle;
+
+  /// No description provided for @welcomeLeagueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected league determines which market prices are used.'**
+  String get welcomeLeagueHint;
+
+  /// No description provided for @welcomeOverlayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the overlay'**
+  String get welcomeOverlayTitle;
+
+  /// No description provided for @welcomeOverlayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a layout, then adjust the live preview while the main window stays open.'**
+  String get welcomeOverlayHint;
+
+  /// No description provided for @welcomeOverlayDragHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the visible overlay to where you want it. Turn off click through if you need to move it again.'**
+  String get welcomeOverlayDragHint;
+
+  /// No description provided for @finishSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish setup'**
+  String get finishSetup;
 }
 
 class _AppLocalizationsDelegate

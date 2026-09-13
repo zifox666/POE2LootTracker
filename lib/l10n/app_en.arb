@@ -23,7 +23,7 @@
   "defaultCost": "Default",
   "defaultCostHint": "Used when the entered map is not assigned to another cost.",
   "manualOnly": "No assigned maps · available for manual switching",
-  "invalidCostPreset": "Enter a cost name and a price greater than zero.",
+  "invalidCostPreset": "Enter a cost name and a price greater than or equal to zero.",
   "activeCost": "Active cost",
   "noCostPreset": "No cost",
   "manualCostFallback": "Manual fallback for maps without a match",
@@ -248,5 +248,18 @@
   "mapLevel": "Area level {level}",
   "@mapLevel": { "placeholders": { "level": { "type": "int" } } },
   "itemsCount": "{count} items",
-  "@itemsCount": { "placeholders": { "count": { "type": "int" } } }
+  "@itemsCount": { "placeholders": { "count": { "type": "int" } } },
+  "welcomeTitle": "Welcome to POE2 Loot Tracker",
+  "welcomeSubtitle": "Complete these essentials before you start tracking. You can change them later in Settings.",
+  "welcomeAppearanceStep": "Language and appearance",
+  "welcomeLeagueStep": "League",
+  "welcomeOverlayStep": "Overlay",
+  "welcomeAppearanceTitle": "Choose your language and appearance",
+  "welcomeAppearanceHint": "These choices apply immediately to the entire application.",
+  "welcomeLeagueTitle": "Select your current league",
+  "welcomeLeagueHint": "The selected league determines which market prices are used.",
+  "welcomeOverlayTitle": "Set up the overlay",
+  "welcomeOverlayHint": "Choose a layout, then adjust the live preview while the main window stays open.",
+  "welcomeOverlayDragHint": "Drag the visible overlay to where you want it. Turn off click through if you need to move it again.",
+  "finishSetup": "Finish setup"
 }

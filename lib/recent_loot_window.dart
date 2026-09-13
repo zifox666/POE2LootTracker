@@ -88,6 +88,7 @@ class _RecentLootApplicationState extends State<RecentLootApplication>
       }
       if (call.method == 'prepareToShow') {
         await initialization;
+        await interaction.refreshRenderSurface();
         return interaction.ensureVisible();
       }
       if (call.method == 'preview') {

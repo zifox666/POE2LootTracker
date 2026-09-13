@@ -475,7 +475,7 @@ class _CostPresetDialogState extends State<_CostPresetDialog> {
   void _save() {
     final l = AppLocalizations.of(context);
     final parsed = double.tryParse(amount.text.trim().replaceAll(',', '.'));
-    if (name.text.trim().isEmpty || parsed == null || parsed <= 0) {
+    if (name.text.trim().isEmpty || parsed == null || parsed < 0) {
       setState(() => error = l.invalidCostPreset);
       return;
     }

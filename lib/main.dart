@@ -13,6 +13,7 @@ import 'l10n/app_localizations.dart';
 import 'overlay_window.dart';
 import 'recent_loot_window.dart';
 import 'screens/main_shell.dart';
+import 'screens/welcome_screen.dart';
 import 'system_proxy.dart';
 import 'window_coordinator.dart';
 import 'windows_runtime.dart';
@@ -230,6 +231,7 @@ class _DesktopShellState extends State<_DesktopShell> {
       _scheduleDatabaseResetPrompt();
       return;
     }
+    if (widget.controller.settings['welcomeCompleted'] != true) return;
     // Shown on every launch, not just the first: it is a disclaimer, and the only thing the earlier
     // acknowledgement decides is how long it locks its own button.
     _scheduleWarning();
@@ -364,6 +366,15 @@ class _DesktopShellState extends State<_DesktopShell> {
 
   Future<void> _resetDatabase() => _showDatabaseResetPrompt(corrupted: false);
 
+  Future<void> _completeWelcome() async {
+    try {
+      await widget.controller.updateSettings({'welcomeCompleted': true});
+      await widget.coordinator.hideOverlay();
+    } catch (error) {
+      widget.controller.setError('settings: $error');
+    }
+  }
+
   @override
   void dispose() {
     widget.controller.removeListener(_changed);
@@ -372,12 +383,23 @@ class _DesktopShellState extends State<_DesktopShell> {
   }
 
   @override
-  Widget build(BuildContext context) => MainShell(
-    controller: widget.controller,
-    onShowOverlay: widget.coordinator.showOverlay,
-    onShowRecentLoot: widget.coordinator.previewRecentLoot,
-    onNewSession: _newSession,
-    onCloseWindow: _closeMainWindow,
-    onResetDatabase: _resetDatabase,
-  );
+  Widget build(BuildContext context) {
+    if (!widget.controller.loading &&
+        widget.controller.settings['welcomeCompleted'] != true) {
+      return WelcomeScreen(
+        controller: widget.controller,
+        onShowOverlayPreview: widget.coordinator.previewOverlay,
+        onFinish: _completeWelcome,
+        onClose: _closeMainWindow,
+      );
+    }
+    return MainShell(
+      controller: widget.controller,
+      onShowOverlay: widget.coordinator.showOverlay,
+      onShowRecentLoot: widget.coordinator.previewRecentLoot,
+      onNewSession: _newSession,
+      onCloseWindow: _closeMainWindow,
+      onResetDatabase: _resetDatabase,
+    );
+  }
 }

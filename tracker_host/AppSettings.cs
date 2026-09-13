@@ -28,6 +28,7 @@ internal sealed class AppSettings
     public string League { get; set; } = "Standard";
     public int PriceCacheMinutes { get; set; } = 30;
     public bool RiskAcknowledged { get; set; }
+    public bool WelcomeCompleted { get; set; }
 
     /// Ask before starting a new session. The dialogs offer to remember the answer, so this is how
     /// "don't ask again" is stored.
@@ -41,7 +42,11 @@ internal sealed class AppSettings
     public string UpdateSource { get; set; } = "cdn";
     public string CustomUpdateCdn { get; set; } = string.Empty;
 
-    public List<CostPreset> CostPresets { get; set; } = new();
+    public List<CostPreset> CostPresets { get; set; } = CreateDefaultCostPresets();
+
+    /// Marks the one-time migration that adds the built-in editable map groups. Once set, deleting
+    /// or changing those presets is respected instead of restoring them on the next launch.
+    public bool CostPresetDefaultsInitialized { get; set; } = true;
 
     /// Legacy/default-id mirror kept for compatibility with settings written by the first cost
     /// implementation. [CostPreset.IsDefault] is authoritative after normalization.
@@ -62,7 +67,23 @@ internal sealed class AppSettings
         if (string.IsNullOrWhiteSpace(json)) return new AppSettings();
         try
         {
+            using var document = JsonDocument.Parse(json);
+            bool defaultsWereInitialized = document.RootElement.TryGetProperty(
+                nameof(CostPresetDefaultsInitialized),
+                out _);
+            bool welcomeWasInitialized = document.RootElement.TryGetProperty(
+                nameof(WelcomeCompleted),
+                out _);
             var value = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            if (!defaultsWereInitialized)
+            {
+                value.EnsureDefaultCostPresets();
+                value.CostPresetDefaultsInitialized = true;
+            }
+            if (!welcomeWasInitialized)
+            {
+                value.WelcomeCompleted = value.RiskAcknowledged;
+            }
             value.Normalize();
             return value;
         }
@@ -103,11 +124,13 @@ internal sealed class AppSettings
         League = value.League;
         PriceCacheMinutes = value.PriceCacheMinutes;
         RiskAcknowledged = value.RiskAcknowledged;
+        WelcomeCompleted = value.WelcomeCompleted;
         ConfirmNewSession = value.ConfirmNewSession;
         CloseAction = value.CloseAction;
         UpdateSource = value.UpdateSource;
         CustomUpdateCdn = value.CustomUpdateCdn;
         CostPresets = (value.CostPresets ?? new()).Select(CopyCostPreset).ToList();
+        CostPresetDefaultsInitialized = value.CostPresetDefaultsInitialized;
         SelectedCostPresetId = value.SelectedCostPresetId;
         Normalize();
     }
@@ -137,6 +160,7 @@ internal sealed class AppSettings
         ThemeMode = value.ThemeMode;
         ThemeModeConfigured = value.ThemeModeConfigured;
         RiskAcknowledged = value.RiskAcknowledged;
+        WelcomeCompleted = value.WelcomeCompleted;
         ConfirmNewSession = value.ConfirmNewSession;
         CloseAction = value.CloseAction;
         UpdateSource = value.UpdateSource;
@@ -154,7 +178,7 @@ internal sealed class AppSettings
         var ids = new HashSet<string>(StringComparer.Ordinal);
         CostPresets = CostPresets
             .Where(preset => preset != null && !string.IsNullOrWhiteSpace(preset.Name) &&
-                preset.Amount > 0 && !double.IsNaN(preset.Amount) && !double.IsInfinity(preset.Amount))
+                preset.Amount >= 0 && !double.IsNaN(preset.Amount) && !double.IsInfinity(preset.Amount))
             .Select(preset =>
             {
                 preset.Id = string.IsNullOrWhiteSpace(preset.Id) || !ids.Add(preset.Id)
@@ -222,4 +246,72 @@ internal sealed class AppSettings
         IsDefault = preset.IsDefault,
         MapName = preset.MapName,
     };
+
+    private void EnsureDefaultCostPresets()
+    {
+        CostPresets ??= new();
+        foreach (var preset in CreateDefaultCostPresets())
+        {
+            if (!CostPresets.Any(value => string.Equals(value.Id, preset.Id, StringComparison.Ordinal)))
+            {
+                CostPresets.Add(preset);
+            }
+        }
+    }
+
+    private static List<CostPreset> CreateDefaultCostPresets() =>
+    [
+        new CostPreset
+        {
+            Id = "builtin_large_expedition_maps",
+            Name = "大型炸坟地图",
+            Amount = 0,
+            Currency = "E",
+            MapNames =
+            [
+                "掘尸遗迹", "廢棄挖掘場", "Exhumed Ruins",
+                "脱落沟壑", "滑塌溪谷", "Sloughed Gully",
+                "天陨荒原", "殞空荒原", "Moor of Fallen Skies",
+                "乱石半岛", "崎嶇半島", "Craggy Peninsula",
+                "牧野荒原", "闊牧遼原", "Grazed Prairie",
+                "褪色浅滩", "白化淺灘", "Bleached Shoals",
+                "笼葱海岛", "蓊鬱群島", "Lush Isle",
+                "凛风悬崖", "寒風峭壁", "Frigid Bluffs",
+                "焦灼小岛", "焦灼孤島", "Scorched Cay",
+                "贫瘠环礁", "貧瘠環礁", "Barren Atoll",
+                "死水盆地", "靜滯盆地", "Stagnant Basin",
+            ],
+        },
+        new CostPreset
+        {
+            Id = "builtin_special_encounter_maps",
+            Name = "特殊遭遇地图",
+            Amount = 0,
+            Currency = "E",
+            MapNames =
+            [
+                "颠沛领域", "漂流者之所", "Castaway",
+                "纯净乐园", "純淨樂園", "Untainted Paradise",
+                "卡马萨的宝库", "卡瑪薩秘寶庫", "Vaults of Kamasa",
+                "翠绿荒林", "翠綠荒林", "The Viridian Wildwood",
+                "寂静窟", "沉默洞穴", "The Silent Cave",
+                "千裂泽", "破裂迷湖", "The Fractured Lake",
+            ],
+        },
+        new CostPreset
+        {
+            Id = "builtin_free_maps",
+            Name = "不计费地图",
+            Amount = 0,
+            Currency = "E",
+            MapNames =
+            [
+                "金字塔避难所", "高地神塔庇護所", "The Ziggurat Refuge",
+                "守护者修道院", "黯焰修道院", "Monastery of the Keepers",
+                "陨星", "殞星", "The Fallen Star",
+                "瓦尔遗迹", "瓦爾遺跡", "Vaal Ruins",
+                "阿兹里神庙", "阿茲里的神廟", "Atziri's Temple",
+            ],
+        },
+    ];
 }

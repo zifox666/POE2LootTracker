@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # Releasing is: bump this line, run the tool, commit, then push the matching semantic tag
 # (`1.2.3` releases as `v1.2.3`). .github/workflows/release.yml builds the bundle, so do not build
 # and upload one by hand. Keep this as a bare semantic version without a `+BUILD` suffix.
-version: 1.1.1
+version: 1.1.2
 environment:
   sdk: ^3.11.1
 

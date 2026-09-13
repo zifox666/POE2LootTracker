@@ -148,6 +148,25 @@ class OverlayInteractionPlugin : public flutter::Plugin {
       return;
     }
 
+    if (call.method_name() == "refreshRenderSurface") {
+      HWND flutter_view = registrar_->GetView()->GetNativeWindow();
+      RECT client{};
+      if (flutter_view == nullptr || !::GetClientRect(window_, &client)) {
+        result->Error("refresh-render-surface-failed",
+                      "Windows could not read the Flutter window size");
+        return;
+      }
+      const int width = client.right - client.left;
+      const int height = client.bottom - client.top;
+      // Flutter's Windows embedder can transpose a hidden transparent window's render-surface
+      // dimensions when its frame changes before the first non-empty scene. A one-pixel child-HWND
+      // resize followed by the real client size makes the embedder recreate the surface correctly.
+      ::MoveWindow(flutter_view, 0, 0, width + 1, height, TRUE);
+      ::MoveWindow(flutter_view, 0, 0, width, height, TRUE);
+      result->Success(flutter::EncodableValue(true));
+      return;
+    }
+
     if (call.method_name() == "ensureVisible") {
       if (::IsIconic(window_)) {
         ::ShowWindow(window_, SW_RESTORE);

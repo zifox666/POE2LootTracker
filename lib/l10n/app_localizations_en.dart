@@ -84,7 +84,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidCostPreset =>
-      'Enter a cost name and a price greater than zero.';
+      'Enter a cost name and a price greater than or equal to zero.';
 
   @override
   String get activeCost => 'Active cost';
@@ -738,4 +738,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String itemsCount(int count) {
     return '$count items';
   }
+
+  @override
+  String get welcomeTitle => 'Welcome to POE2 Loot Tracker';
+
+  @override
+  String get welcomeSubtitle =>
+      'Complete these essentials before you start tracking. You can change them later in Settings.';
+
+  @override
+  String get welcomeAppearanceStep => 'Language and appearance';
+
+  @override
+  String get welcomeLeagueStep => 'League';
+
+  @override
+  String get welcomeOverlayStep => 'Overlay';
+
+  @override
+  String get welcomeAppearanceTitle => 'Choose your language and appearance';
+
+  @override
+  String get welcomeAppearanceHint =>
+      'These choices apply immediately to the entire application.';
+
+  @override
+  String get welcomeLeagueTitle => 'Select your current league';
+
+  @override
+  String get welcomeLeagueHint =>
+      'The selected league determines which market prices are used.';
+
+  @override
+  String get welcomeOverlayTitle => 'Set up the overlay';
+
+  @override
+  String get welcomeOverlayHint =>
+      'Choose a layout, then adjust the live preview while the main window stays open.';
+
+  @override
+  String get welcomeOverlayDragHint =>
+      'Drag the visible overlay to where you want it. Turn off click through if you need to move it again.';
+
+  @override
+  String get finishSetup => 'Finish setup';
 }
