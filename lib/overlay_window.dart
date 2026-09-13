@@ -692,6 +692,7 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
                   amount: s.currentProfitEx,
                   rate: s.divineRate,
                   fontSize: 16,
+                  divineRmbPrice: widget.app.divineRmbPrice,
                 ),
               ),
               Expanded(
@@ -700,6 +701,7 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
                   amount: s.totalProfitEx,
                   rate: s.divineRate,
                   fontSize: 16,
+                  divineRmbPrice: widget.app.divineRmbPrice,
                 ),
               ),
               // Was missing from this layout, even though the minimal bar and the main window both
@@ -710,6 +712,7 @@ class _FloatingOverlayState extends State<FloatingOverlay> {
                   amount: s.perHourEx,
                   rate: s.divineRate,
                   fontSize: 16,
+                  divineRmbPrice: widget.app.divineRmbPrice,
                 ),
               ),
             ],
@@ -953,13 +956,11 @@ class MinimalOverlay extends StatelessWidget {
                       child: _InlineLabel(
                         label: l.currentMap,
                         stacked: stackBottomMetrics,
-                        child: AmountView(
-                          s.currentProfitEx,
-                          s.divineRate,
+                        child: _RevenueWithRmb(
+                          amount: s.currentProfitEx,
+                          rate: s.divineRate,
+                          divineRmbPrice: app.divineRmbPrice,
                           fontSize: 14,
-                          color: s.currentProfitEx < 0
-                              ? tradingRed
-                              : tradingGreen,
                         ),
                       ),
                     ),
@@ -967,13 +968,11 @@ class MinimalOverlay extends StatelessWidget {
                       child: _InlineLabel(
                         label: l.totalRevenue,
                         stacked: stackBottomMetrics,
-                        child: AmountView(
-                          s.totalProfitEx,
-                          s.divineRate,
+                        child: _RevenueWithRmb(
+                          amount: s.totalProfitEx,
+                          rate: s.divineRate,
+                          divineRmbPrice: app.divineRmbPrice,
                           fontSize: 14,
-                          color: s.totalProfitEx < 0
-                              ? tradingRed
-                              : tradingGreen,
                         ),
                       ),
                     ),
@@ -981,11 +980,11 @@ class MinimalOverlay extends StatelessWidget {
                       child: _InlineLabel(
                         label: l.revenuePerHour,
                         stacked: stackBottomMetrics,
-                        child: AmountView(
-                          s.perHourEx,
-                          s.divineRate,
+                        child: _RevenueWithRmb(
+                          amount: s.perHourEx,
+                          rate: s.divineRate,
+                          divineRmbPrice: app.divineRmbPrice,
                           fontSize: 14,
-                          color: s.perHourEx < 0 ? tradingRed : tradingGreen,
                         ),
                       ),
                     ),
@@ -1017,11 +1016,13 @@ class _OverlayMetric extends StatelessWidget {
     required this.label,
     required this.amount,
     required this.rate,
+    required this.divineRmbPrice,
     this.fontSize = 18,
   });
   final String label;
   final double amount;
   final double rate;
+  final double? divineRmbPrice;
   final double fontSize;
   @override
   Widget build(BuildContext context) => Column(
@@ -1032,14 +1033,54 @@ class _OverlayMetric extends StatelessWidget {
         style: TextStyle(fontSize: 10, color: context.colors.mutedForeground),
       ),
       const SizedBox(height: 5),
-      AmountView(
-        amount,
-        rate,
+      _RevenueWithRmb(
+        amount: amount,
+        rate: rate,
+        divineRmbPrice: divineRmbPrice,
         fontSize: fontSize,
-        color: amount < 0 ? tradingRed : tradingGreen,
       ),
     ],
   );
+}
+
+class _RevenueWithRmb extends StatelessWidget {
+  const _RevenueWithRmb({
+    required this.amount,
+    required this.rate,
+    required this.divineRmbPrice,
+    required this.fontSize,
+  });
+
+  final double amount;
+  final double rate;
+  final double? divineRmbPrice;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final rmb = formatRmbRevenue(amount, rate, divineRmbPrice);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AmountView(
+          amount,
+          rate,
+          fontSize: fontSize,
+          color: amount < 0 ? tradingRed : tradingGreen,
+        ),
+        if (rmb != null) ...[
+          const SizedBox(width: 6),
+          Text(
+            rmb,
+            style: context.numberStyle.copyWith(
+              fontSize: 10,
+              color: context.colors.mutedForeground,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 class _OverlayTextMetric extends StatelessWidget {

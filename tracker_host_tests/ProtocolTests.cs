@@ -55,6 +55,9 @@ public sealed class ProtocolTests
             RiskAcknowledged = true,
             UpdateSource = "custom",
             CustomUpdateCdn = "https://mirror.example/",
+            RmbPriceSource = "custom",
+            CustomRmbPriceUrl = "https://prices.example/",
+            CustomRmbPriceApiKey = "private-key",
             PickupToastsEnabled = true,
             PickupToastMaxVisible = 99,
             PickupToastDurationSeconds = 0.25,
@@ -64,6 +67,9 @@ public sealed class ProtocolTests
         current.ApplyUiOnly(incoming);
         Assert.Equal("custom", current.UpdateSource);
         Assert.Equal("https://mirror.example/", current.CustomUpdateCdn);
+        Assert.Equal("custom", current.RmbPriceSource);
+        Assert.Equal("https://prices.example/", current.CustomRmbPriceUrl);
+        Assert.Equal("private-key", current.CustomRmbPriceApiKey);
         Assert.True(current.PickupToastsEnabled);
         Assert.Equal(10, current.PickupToastMaxVisible);
         Assert.Equal(1, current.PickupToastDurationSeconds);

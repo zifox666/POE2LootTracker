@@ -430,6 +430,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get priceRefresh => '价格刷新间隔';
 
   @override
+  String get rmbPriceSource => '人民币价格来源';
+
+  @override
+  String get defaultPriceServer => '默认服务器';
+
+  @override
+  String get customPriceServer => '自定义服务器';
+
+  @override
+  String get priceServerUrl => '价格服务器';
+
+  @override
+  String get priceServerUrlHint => '例如：https://prices.example.com';
+
+  @override
+  String get priceApiKey => 'API Key';
+
+  @override
+  String get priceApiKeyHint => '自定义服务器可选';
+
+  @override
   String get minutes => '分钟';
 
   @override

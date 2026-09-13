@@ -88,6 +88,11 @@ class _SettingsTabState extends State<SettingsTab> {
           l.typographySettings,
           l.league,
           l.priceRefresh,
+          l.rmbPriceSource,
+          l.defaultPriceServer,
+          l.customPriceServer,
+          l.priceServerUrl,
+          l.priceApiKey,
           l.closeBehavior,
           l.overlayMode,
           l.floating,
@@ -217,6 +222,11 @@ class _SettingsTabState extends State<SettingsTab> {
                 l.gameSettings,
                 l.league,
                 l.priceRefresh,
+                l.rmbPriceSource,
+                l.defaultPriceServer,
+                l.customPriceServer,
+                l.priceServerUrl,
+                l.priceApiKey,
                 l.applicationBehavior,
                 l.closeBehavior,
               ]))
@@ -263,6 +273,19 @@ class _SettingsTabState extends State<SettingsTab> {
                       'priceCacheMinutes': int.parse(value),
                     }),
                   ),
+                  _choice(
+                    context,
+                    l.rmbPriceSource,
+                    controller.rmbPriceSource,
+                    {
+                      'default': l.defaultPriceServer,
+                      'custom': l.customPriceServer,
+                    },
+                    (value) =>
+                        controller.updateSettings({'rmbPriceSource': value}),
+                  ),
+                  if (controller.rmbPriceSource == 'custom')
+                    _CustomPriceServer(controller: controller),
                   _subheading(context, l.typographySettings),
                   _scaleSlider(
                     context,
@@ -973,6 +996,101 @@ class _CustomUpdateCdnState extends State<_CustomUpdateCdn> {
       ),
     );
   }
+}
+
+class _CustomPriceServer extends StatefulWidget {
+  const _CustomPriceServer({required this.controller});
+  final AppController controller;
+
+  @override
+  State<_CustomPriceServer> createState() => _CustomPriceServerState();
+}
+
+class _CustomPriceServerState extends State<_CustomPriceServer> {
+  late final url = TextEditingController(
+    text: widget.controller.customRmbPriceUrl,
+  );
+  late final apiKey = TextEditingController(
+    text: widget.controller.customRmbPriceApiKey,
+  );
+
+  @override
+  void dispose() {
+    url.dispose();
+    apiKey.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() => widget.controller.updateSettings({
+    'customRmbPriceUrl': url.text.trim(),
+    'customRmbPriceApiKey': apiKey.text.trim(),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        children: [
+          _field(
+            context,
+            label: l.priceServerUrl,
+            controller: url,
+            hint: l.priceServerUrlHint,
+            keyboardType: TextInputType.url,
+          ),
+          const SizedBox(height: 10),
+          _field(
+            context,
+            label: l.priceApiKey,
+            controller: apiKey,
+            hint: l.priceApiKeyHint,
+            obscureText: true,
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FButton(
+              onPress: _save,
+              variant: FButtonVariant.outline,
+              mainAxisSize: MainAxisSize.min,
+              child: Text(l.save),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _field(
+    BuildContext context, {
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+  }) => Row(
+    children: [
+      Expanded(child: Text(label)),
+      SizedBox(
+        width: 320,
+        child: TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          obscureText: obscureText,
+          autocorrect: false,
+          enableSuggestions: false,
+          onSubmitted: (_) => _save(),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: hint,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _OffsetSettings extends StatefulWidget {

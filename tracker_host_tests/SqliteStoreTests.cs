@@ -138,8 +138,15 @@ public sealed class SqliteStoreTests
                     preset.MapNames.Contains("Atziri's Temple"));
 
                 migrated.CostPresets.Clear();
+                migrated.RmbPriceSource = "custom";
+                migrated.CustomRmbPriceUrl = "https://prices.example/";
+                migrated.CustomRmbPriceApiKey = "private-key";
                 migrated.Save(store);
-                Assert.Empty(AppSettings.Load(store).CostPresets);
+                var reloaded = AppSettings.Load(store);
+                Assert.Empty(reloaded.CostPresets);
+                Assert.Equal("custom", reloaded.RmbPriceSource);
+                Assert.Equal("https://prices.example/", reloaded.CustomRmbPriceUrl);
+                Assert.Equal("private-key", reloaded.CustomRmbPriceApiKey);
             }
         }
         finally

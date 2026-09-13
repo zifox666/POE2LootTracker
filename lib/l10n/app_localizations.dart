@@ -926,6 +926,48 @@ abstract class AppLocalizations {
   /// **'Price refresh interval'**
   String get priceRefresh;
 
+  /// No description provided for @rmbPriceSource.
+  ///
+  /// In en, this message translates to:
+  /// **'RMB price source'**
+  String get rmbPriceSource;
+
+  /// No description provided for @defaultPriceServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Default server'**
+  String get defaultPriceServer;
+
+  /// No description provided for @customPriceServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom server'**
+  String get customPriceServer;
+
+  /// No description provided for @priceServerUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Price server'**
+  String get priceServerUrl;
+
+  /// No description provided for @priceServerUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: https://prices.example.com'**
+  String get priceServerUrlHint;
+
+  /// No description provided for @priceApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get priceApiKey;
+
+  /// No description provided for @priceApiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional for custom servers'**
+  String get priceApiKeyHint;
+
   /// No description provided for @minutes.
   ///
   /// In en, this message translates to:

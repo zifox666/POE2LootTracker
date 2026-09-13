@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'app_version.dart';
 import 'host_client.dart';
 import 'models.dart';
+import 'qiandao_price_service.dart';
 import 'steam_stats_service.dart';
 import 'update_service.dart';
 
@@ -24,17 +25,21 @@ class AppController extends ChangeNotifier {
   AppController({
     HostClient? host,
     UpdateService? updateService,
+    QiandaoPriceService? qiandaoPriceService,
     SteamStatsService? steamStatsService,
     this.startHost = true,
   }) : host = host ?? HostClient(),
        updateService = updateService ?? UpdateService(),
+       qiandaoPriceService = qiandaoPriceService ?? QiandaoPriceService(),
        steamStatsService = steamStatsService ?? SteamStatsService();
   final HostClient host;
   final UpdateService updateService;
+  final QiandaoPriceService qiandaoPriceService;
   final SteamStatsService steamStatsService;
   final bool startHost;
   StreamSubscription<Map<String, dynamic>>? _events;
   Timer? _onlinePlayersTimer;
+  Timer? _qiandaoPriceTimer;
 
   TrackerSnapshot snapshot = TrackerSnapshot.empty;
   List<SessionRow> sessions = [];
@@ -56,6 +61,7 @@ class AppController extends ChangeNotifier {
   String? updateError;
   int updateDownloadPercent = 0;
   int? onlinePlayers;
+  double? divineRmbPrice;
   DateTime _lastSnapshotNotify = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// Minimum spacing between rebuilds driven by `trackerSnapshot` pushes from the host.
@@ -93,6 +99,19 @@ class AppController extends ChangeNotifier {
   String get updateSource => settings['updateSource']?.toString() ?? 'cdn';
 
   String get customUpdateCdn => settings['customUpdateCdn']?.toString() ?? '';
+
+  String get rmbPriceSource =>
+      settings['rmbPriceSource']?.toString() == 'custom' ? 'custom' : 'default';
+
+  String get customRmbPriceUrl =>
+      settings['customRmbPriceUrl']?.toString() ?? '';
+
+  String get customRmbPriceApiKey =>
+      settings['customRmbPriceApiKey']?.toString() ?? '';
+
+  String get _rmbPriceSignature => rmbPriceSource == 'custom'
+      ? '$rmbPriceSource|$customRmbPriceUrl|$customRmbPriceApiKey'
+      : rmbPriceSource;
 
   bool get isInstalledEdition => updateService.isInstalledEdition;
 
@@ -141,10 +160,37 @@ class AppController extends ChangeNotifier {
     }
     unawaited(checkForUpdates(silent: true));
     unawaited(refreshOnlinePlayers());
+    unawaited(refreshQiandaoPrice());
     _onlinePlayersTimer ??= Timer.periodic(
       const Duration(minutes: 5),
       (_) => unawaited(refreshOnlinePlayers()),
     );
+    _qiandaoPriceTimer ??= Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => unawaited(refreshQiandaoPrice()),
+    );
+  }
+
+  Future<void> refreshQiandaoPrice() async {
+    final custom = rmbPriceSource == 'custom';
+    final baseUrl = custom ? customRmbPriceUrl : null;
+    final token = custom ? customRmbPriceApiKey : null;
+    if (!qiandaoPriceService.configured(baseUrl: baseUrl, token: token)) return;
+    final signature = _rmbPriceSignature;
+    try {
+      final price = await qiandaoPriceService.divineRmbPrice(
+        baseUrl: baseUrl,
+        token: token,
+      );
+      if (signature != _rmbPriceSignature) return;
+      if (price == divineRmbPrice) return;
+      divineRmbPrice = price;
+      notifyListeners();
+    } catch (exception) {
+      // RMB pricing is supplemental. Keep the last successful quote while the private adapter or
+      // its undocumented upstream is temporarily unavailable.
+      debugPrint('qiandao: price refresh failed: $exception');
+    }
   }
 
   Future<void> refreshOnlinePlayers() async {
@@ -307,8 +353,19 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> updateSettings(Map<String, dynamic> changes) async {
+    final priceSourceChanged = changes.keys.any(
+      const {
+        'rmbPriceSource',
+        'customRmbPriceUrl',
+        'customRmbPriceApiKey',
+      }.contains,
+    );
     final next = <String, dynamic>{...settings, ...changes};
     _readSettings(await host.request('updateSettings', next));
+    if (priceSourceChanged) {
+      divineRmbPrice = null;
+      unawaited(refreshQiandaoPrice());
+    }
     notifyListeners();
   }
 
@@ -408,6 +465,9 @@ class AppController extends ChangeNotifier {
     if (state['screenCaptureActive'] is bool) {
       screenCaptureActive = state['screenCaptureActive'] as bool;
     }
+    if (state['divineRmbPrice'] is num) {
+      divineRmbPrice = (state['divineRmbPrice'] as num).toDouble();
+    }
     notifyListeners();
   }
 
@@ -415,6 +475,7 @@ class AppController extends ChangeNotifier {
     'snapshot': snapshotToJson(snapshot),
     'settings': settings,
     'screenCaptureActive': screenCaptureActive,
+    'divineRmbPrice': divineRmbPrice,
   };
 
   void _handleEvent(Map<String, dynamic> event) {
@@ -515,9 +576,11 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _events?.cancel();
     _onlinePlayersTimer?.cancel();
+    _qiandaoPriceTimer?.cancel();
     if (startHost) unawaited(host.dispose());
     updateService.close();
     steamStatsService.close();
+    qiandaoPriceService.close();
     super.dispose();
   }
 }
@@ -557,6 +620,9 @@ const defaultSettings = <String, dynamic>{
   'confirmNewSession': true,
   'updateSource': 'cdn',
   'customUpdateCdn': '',
+  'rmbPriceSource': 'default',
+  'customRmbPriceUrl': '',
+  'customRmbPriceApiKey': '',
   // "" asks on every close, "exit" quits, "overlay" keeps tracking in the small window.
   'closeAction': '',
 };

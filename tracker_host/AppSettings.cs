@@ -42,6 +42,11 @@ internal sealed class AppSettings
     public string UpdateSource { get; set; } = "cdn";
     public string CustomUpdateCdn { get; set; } = string.Empty;
 
+    /// RMB revenue uses the built-in adapter unless the user explicitly supplies a custom one.
+    public string RmbPriceSource { get; set; } = "default";
+    public string CustomRmbPriceUrl { get; set; } = string.Empty;
+    public string CustomRmbPriceApiKey { get; set; } = string.Empty;
+
     public List<CostPreset> CostPresets { get; set; } = CreateDefaultCostPresets();
 
     /// Marks the one-time migration that adds the built-in editable map groups. Once set, deleting
@@ -129,6 +134,9 @@ internal sealed class AppSettings
         CloseAction = value.CloseAction;
         UpdateSource = value.UpdateSource;
         CustomUpdateCdn = value.CustomUpdateCdn;
+        RmbPriceSource = value.RmbPriceSource;
+        CustomRmbPriceUrl = value.CustomRmbPriceUrl;
+        CustomRmbPriceApiKey = value.CustomRmbPriceApiKey;
         CostPresets = (value.CostPresets ?? new()).Select(CopyCostPreset).ToList();
         CostPresetDefaultsInitialized = value.CostPresetDefaultsInitialized;
         SelectedCostPresetId = value.SelectedCostPresetId;
@@ -165,6 +173,9 @@ internal sealed class AppSettings
         CloseAction = value.CloseAction;
         UpdateSource = value.UpdateSource;
         CustomUpdateCdn = value.CustomUpdateCdn;
+        RmbPriceSource = value.RmbPriceSource;
+        CustomRmbPriceUrl = value.CustomRmbPriceUrl;
+        CustomRmbPriceApiKey = value.CustomRmbPriceApiKey;
         NormalizeUiOnly();
     }
 
@@ -234,6 +245,9 @@ internal sealed class AppSettings
         CloseAction = CloseAction is "exit" or "overlay" ? CloseAction : string.Empty;
         UpdateSource = UpdateSource is "cdn" or "native" or "custom" ? UpdateSource : "cdn";
         CustomUpdateCdn = (CustomUpdateCdn ?? string.Empty).Trim();
+        RmbPriceSource = RmbPriceSource == "custom" ? "custom" : "default";
+        CustomRmbPriceUrl = (CustomRmbPriceUrl ?? string.Empty).Trim();
+        CustomRmbPriceApiKey = (CustomRmbPriceApiKey ?? string.Empty).Trim();
     }
 
     private static CostPreset CopyCostPreset(CostPreset preset) => new()

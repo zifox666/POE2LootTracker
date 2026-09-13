@@ -47,7 +47,13 @@ jobs:
         run: dotnet test tracker_host_tests/TrackerHost.Tests.csproj -c Release
 
       - name: Build Windows application
-        run: flutter build windows --release
+        env:
+          QIANDAO_URL: ${{ secrets.QIANDAO_URL }}
+          QIANDAO_ADAPTER_TOKEN: ${{ secrets.QIANDAO_ADAPTER_TOKEN }}
+        run: >-
+          flutter build windows --release
+          --dart-define="QIANDAO_URL=$env:QIANDAO_URL"
+          --dart-define="ADAPTER_TOKEN=$env:QIANDAO_ADAPTER_TOKEN"
 
       - name: Package installer, portable edition, and checksums
         id: package

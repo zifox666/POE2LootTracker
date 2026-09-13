@@ -106,6 +106,23 @@ void main() {
     expect(find.text('搜索设置'), findsOneWidget);
     expect(find.text('常规'), findsWidgets);
 
+    expect(find.text('人民币价格来源'), findsOneWidget);
+    expect(find.text('价格服务器'), findsNothing);
+    expect(find.text('API Key'), findsNothing);
+
+    controller.applyForwardedState({
+      'settings': <String, dynamic>{
+        ...controller.settings,
+        'rmbPriceSource': 'custom',
+        'customRmbPriceUrl': 'https://prices.example.com',
+        'customRmbPriceApiKey': 'secret',
+      },
+    });
+    await tester.tap(find.text('常规').first);
+    await tester.pumpAndSettle();
+    expect(find.text('价格服务器'), findsOneWidget);
+    expect(find.text('API Key'), findsOneWidget);
+
     await tester.tap(find.text('拾取通知').first);
     await tester.pumpAndSettle();
     expect(find.text('最多显示条数'), findsOneWidget);

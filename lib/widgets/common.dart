@@ -277,6 +277,17 @@ class AmountView extends StatelessWidget {
   }
 }
 
+String? formatRmbRevenue(
+  double amountEx,
+  double divineRate,
+  double? divineRmbPrice,
+) {
+  if (divineRmbPrice == null || divineRate <= 0) return null;
+  final value = amountEx / divineRate * divineRmbPrice;
+  final sign = value < 0 ? '-' : '';
+  return '$sign¥${value.abs().toStringAsFixed(2)}';
+}
+
 class IconCount extends StatelessWidget {
   const IconCount({
     required this.icon,

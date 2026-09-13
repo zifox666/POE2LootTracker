@@ -47,6 +47,15 @@ void main() {
     tester,
   ) async {
     final controller = AppController(startHost: false);
+    controller.applyForwardedState({
+      'divineRmbPrice': 0.2,
+      'snapshot': const <String, dynamic>{
+        'divineRate': 100,
+        'currentProfitEx': 100,
+        'totalProfitEx': 200,
+        'perHourEx': 300,
+      },
+    });
     final theme = buildForuiTheme(true);
     await tester.pumpWidget(
       MaterialApp(
@@ -77,6 +86,9 @@ void main() {
     expect(find.text('Current map'), findsOneWidget);
     expect(find.text('Total revenue'), findsOneWidget);
     expect(find.text('Average map time'), findsOneWidget);
+    expect(find.text('¥0.20'), findsOneWidget);
+    expect(find.text('¥0.40'), findsOneWidget);
+    expect(find.text('¥0.60'), findsOneWidget);
     expect(find.byType(Divider), findsOneWidget);
     controller.dispose();
   });

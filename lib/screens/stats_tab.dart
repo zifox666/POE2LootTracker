@@ -119,6 +119,7 @@ class _StatsTabState extends State<StatsTab> {
         rate: rate,
         trend: trend,
         color: profit < 0 ? tradingRed : const Color(0xFFFF7A45),
+        divineRmbPrice: widget.controller.divineRmbPrice,
       ),
       _AmountMetric(
         label: l.revenuePerHour,
@@ -126,6 +127,7 @@ class _StatsTabState extends State<StatsTab> {
         rate: rate,
         trend: maps.map((map) => _perMinute(map)).toList(growable: false),
         color: perHour < 0 ? tradingRed : tradingGreen,
+        divineRmbPrice: widget.controller.divineRmbPrice,
       ),
       _KillMetric(kills: snapshot.kills),
       _DurationMetric(
@@ -507,12 +509,14 @@ class _AmountMetric extends StatelessWidget {
     required this.rate,
     required this.trend,
     required this.color,
+    required this.divineRmbPrice,
   });
   final String label;
   final double amount;
   final double rate;
   final List<double> trend;
   final Color color;
+  final double? divineRmbPrice;
   @override
   Widget build(BuildContext context) => AppCard(
     padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
@@ -538,6 +542,17 @@ class _AmountMetric extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               AmountView(amount, rate, fontSize: 27, color: color),
+              if (formatRmbRevenue(amount, rate, divineRmbPrice)
+                  case final rmb?) ...[
+                const SizedBox(height: 3),
+                Text(
+                  '≈ $rmb',
+                  style: context.numberStyle.copyWith(
+                    fontSize: 11,
+                    color: context.colors.mutedForeground,
+                  ),
+                ),
+              ],
             ],
           ),
         ],

@@ -436,6 +436,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get priceRefresh => 'Price refresh interval';
 
   @override
+  String get rmbPriceSource => 'RMB price source';
+
+  @override
+  String get defaultPriceServer => 'Default server';
+
+  @override
+  String get customPriceServer => 'Custom server';
+
+  @override
+  String get priceServerUrl => 'Price server';
+
+  @override
+  String get priceServerUrlHint => 'For example: https://prices.example.com';
+
+  @override
+  String get priceApiKey => 'API key';
+
+  @override
+  String get priceApiKeyHint => 'Optional for custom servers';
+
+  @override
   String get minutes => 'minutes';
 
   @override

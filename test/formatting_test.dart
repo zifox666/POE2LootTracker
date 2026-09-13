@@ -28,6 +28,13 @@ void main() {
     }
   });
 
+  test('RMB revenue uses the live Divine Orb quote', () {
+    expect(formatRmbRevenue(520.4, 100, 0.1922), '¥1.00');
+    expect(formatRmbRevenue(-260.2, 100, 0.1922), '-¥0.50');
+    expect(formatRmbRevenue(100, 0, 0.1922), isNull);
+    expect(formatRmbRevenue(100, 100, null), isNull);
+  });
+
   test('duration uses compact tabular format', () {
     expect(formatDuration(const Duration(seconds: 65)), '01:05');
     expect(
