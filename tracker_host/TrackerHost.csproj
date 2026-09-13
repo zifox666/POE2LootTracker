@@ -7,10 +7,10 @@
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>tracker_host</AssemblyName>
     <RootNamespace>LootTracker.App</RootNamespace>
-    <Version>1.1.2</Version>
-    <InformationalVersion>1.1.2</InformationalVersion>
-    <FileVersion>1.1.2.0</FileVersion>
-    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <Version>1.1.3</Version>
+    <InformationalVersion>1.1.3</InformationalVersion>
+    <FileVersion>1.1.3.0</FileVersion>
+    <AssemblyVersion>1.1.3.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
