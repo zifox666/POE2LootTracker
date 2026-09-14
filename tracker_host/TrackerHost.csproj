@@ -7,10 +7,10 @@
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>tracker_host</AssemblyName>
     <RootNamespace>LootTracker.App</RootNamespace>
-    <Version>1.1.3</Version>
-    <InformationalVersion>1.1.3</InformationalVersion>
-    <FileVersion>1.1.3.0</FileVersion>
-    <AssemblyVersion>1.1.3.0</AssemblyVersion>
+    <Version>1.1.4</Version>
+    <InformationalVersion>1.1.4</InformationalVersion>
+    <FileVersion>1.1.4.0</FileVersion>
+    <AssemblyVersion>1.1.4.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <None Include="Assets\metaArt.json" CopyToOutputDirectory="PreserveNewest" Link="metaArt.json" />
+    <None Include="Assets\item-base-names.json" CopyToOutputDirectory="PreserveNewest" Link="item-base-names.json" />
     <None Include="Assets\Localization\*.json" CopyToOutputDirectory="PreserveNewest" Link="Localization\%(Filename)%(Extension)" />
     <None Include="Assets\icons\*.png" CopyToOutputDirectory="PreserveNewest" Link="icons\%(Filename)%(Extension)" />
   </ItemGroup>

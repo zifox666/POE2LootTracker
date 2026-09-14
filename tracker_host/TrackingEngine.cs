@@ -41,6 +41,7 @@ internal sealed class LootTrackerEngine : IDisposable
     private PriceCache priceCache = new();
     private readonly Dictionary<string, string> metaToArt = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> chineseItemNames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> baseItemNamesByPath = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> itemBaseNames = new(StringComparer.Ordinal);
     private readonly Dictionary<string, double> manualPricesEx = new(StringComparer.Ordinal);
     private readonly List<MapRun> runs = new();
@@ -83,6 +84,7 @@ internal sealed class LootTrackerEngine : IDisposable
         Directory.CreateDirectory(AppSettings.CacheDirectory);
         this.LoadMetaArt();
         this.LoadChineseItemNames();
+        this.LoadBaseItemNames();
         this.LoadManualPrices();
         this.LoadActiveSession();
         if (!NinjaLeagues.TryLoadFromDisk(this.leagueCachePath, NinjaLeagues.DefaultTtlHours))
@@ -921,13 +923,11 @@ internal sealed class LootTrackerEngine : IDisposable
         if (rarity == 3 && renderArt.Length > 0)
         {
             bool found = this.priceCache.TryGetPriceByArtId(renderArt, out unit) && unit > 0;
-            label = this.priceCache.TryGetNameByArtId(renderArt, out var uniqueName) && uniqueName.Length > 0
-                ? uniqueName
-                : renderArt;
-            label = this.LocalizeItemName(label);
+            string uniqueName = this.priceCache.TryGetNameByArtId(renderArt, out var marketName) ? marketName : string.Empty;
+            label = this.ResolveItemLabel(itemKey, rarity, path, renderArt, uniqueName);
             if (!found)
             {
-                if (this.TryGetEmbeddedPrice(itemKey, out unit, out var embeddedLabel))
+                if (this.TryGetEmbeddedPrice(itemKey, rarity, path, renderArt, out unit, out var embeddedLabel))
                 {
                     label = embeddedLabel;
                     return true;
@@ -947,24 +947,11 @@ internal sealed class LootTrackerEngine : IDisposable
             priced = this.priceCache.TryGetPriceByArtId(art, out unit) && unit > 0;
         }
 
-        if (this.priceCache.TryGetNameByArtId(variant, out var name) && name.Length > 0)
-        {
-            label = name;
-        }
-        else if (this.priceCache.TryGetNameByArtId(art, out name) && name.Length > 0)
-        {
-            label = name;
-        }
-        else
-        {
-            label = this.itemBaseNames.TryGetValue(itemKey, out var baseName) && baseName.Length > 0 ? baseName : art;
-        }
-
-        label = this.LocalizeItemName(label);
+        label = this.ResolveItemLabel(itemKey, rarity, path, renderArt);
 
         if (!priced)
         {
-            if (this.TryGetEmbeddedPrice(itemKey, out unit, out var embeddedLabel))
+            if (this.TryGetEmbeddedPrice(itemKey, rarity, path, renderArt, out unit, out var embeddedLabel))
             {
                 label = embeddedLabel;
                 return true;
@@ -976,27 +963,23 @@ internal sealed class LootTrackerEngine : IDisposable
         return priced;
     }
 
-    private string ResolveItemLabel(string itemKey, int rarity, string path, string renderArt)
+    private string ResolveItemLabel(string itemKey, int rarity, string path, string renderArt, string marketUniqueName = "")
     {
-        if (rarity == 3 && renderArt.Length > 0)
+        if (rarity == 3 && marketUniqueName.Length == 0 && renderArt.Length > 0)
         {
-            string uniqueLabel = this.priceCache.TryGetNameByArtId(renderArt, out var uniqueName) && uniqueName.Length > 0
-                ? uniqueName
-                : renderArt;
-            return this.LocalizeItemName(uniqueLabel);
+            this.priceCache.TryGetNameByArtId(renderArt, out marketUniqueName);
         }
 
-        string art = this.PriceKey(path);
-        string variant = art + RarityVariant(rarity);
-        if (this.priceCache.TryGetNameByArtId(variant, out var name) && name.Length > 0)
-        {
-            return this.LocalizeItemName(name);
-        }
-
-        string label = this.priceCache.TryGetNameByArtId(art, out name) && name.Length > 0
-            ? name
-            : this.itemBaseNames.TryGetValue(itemKey, out var baseName) && baseName.Length > 0 ? baseName : art;
-        return this.LocalizeItemName(label);
+        string runtimeName = this.itemBaseNames.TryGetValue(itemKey, out var baseName) ? baseName : string.Empty;
+        return ItemNameResolver.Resolve(
+            rarity,
+            path,
+            renderArt,
+            runtimeName,
+            marketUniqueName,
+            this.PreferChineseNames,
+            this.baseItemNamesByPath,
+            this.chineseItemNames);
     }
 
     private string ResolveIconUrl(string itemKey)
@@ -1021,7 +1004,7 @@ internal sealed class LootTrackerEngine : IDisposable
         ? translated
         : name;
 
-    private bool TryGetEmbeddedPrice(string itemKey, out double unitEx, out string label)
+    private bool TryGetEmbeddedPrice(string itemKey, int rarity, string path, string renderArt, out double unitEx, out string label)
     {
         unitEx = 0;
         label = string.Empty;
@@ -1044,7 +1027,15 @@ internal sealed class LootTrackerEngine : IDisposable
 
         unitEx = divine ? amount * this.priceCache.DivineToExaltedRate : amount;
         string displayName = baseName[..match.Index].Trim();
-        label = this.LocalizeItemName(displayName.Length > 0 ? displayName : baseName);
+        label = ItemNameResolver.Resolve(
+            rarity,
+            path,
+            renderArt,
+            displayName.Length > 0 ? displayName : baseName,
+            string.Empty,
+            this.PreferChineseNames,
+            new Dictionary<string, string>(StringComparer.Ordinal),
+            this.chineseItemNames);
         return true;
     }
 
@@ -1466,6 +1457,15 @@ internal sealed class LootTrackerEngine : IDisposable
         }
     }
 
+    private void LoadBaseItemNames()
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, "item-base-names.json");
+        foreach (var entry in ItemNameResolver.LoadBaseNames(path, Console.Error.WriteLine))
+        {
+            this.baseItemNamesByPath[entry.Key] = entry.Value;
+        }
+    }
+
     private void LoadManualPrices()
     {
         foreach (var entry in this.store.LoadManualPrices())
@@ -1622,13 +1622,13 @@ internal sealed class LootTrackerEngine : IDisposable
         }
     }
 
-    private static string BuildItemKey(int rarity, string path, string renderArt)
+    internal static string BuildItemKey(int rarity, string path, string renderArt)
     {
         string prefix = $"{(char)('0' + (rarity & 3))}{ItemKeySeparator}{path}";
         return renderArt.Length == 0 ? prefix : $"{prefix}{ItemKeySeparator}{renderArt}";
     }
 
-    private static (int Rarity, string Path, string RenderArt) SplitItemKey(string key)
+    internal static (int Rarity, string Path, string RenderArt) SplitItemKey(string key)
     {
         int first = key.IndexOf(ItemKeySeparator);
         if (first < 0)

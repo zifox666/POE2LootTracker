@@ -12,6 +12,7 @@ POE2 LootTracker 是面向 Windows 的《Path of Exile 2》掉落、地图、击
 - `third_party/`：带许可证信息的上游源码与数据。
 - `windows/`：Windows Runner 与组合构建规则。
 - `tool/version.dart`：项目版本同步与发布标签校验。
+- `tool/update_item_base_names.ps1`：更新离线物品基础名与简中名称资源。
 - `.github/workflows/release.yml`：Windows 构建和 GitHub Release 发布。
 
 ## 本地开发
@@ -33,6 +34,15 @@ dotnet test tracker_host_tests/TrackerHost.Tests.csproj -c Release
 ```
 
 正式构建产物位于 `build\windows\x64\runner\Release`。该目录已经包含 Flutter 应用、`tracker_host` 自包含运行时、许可证和运行所需资源，发布时必须整体打包。
+
+发版前更新物品名称数据并验证生成结果：
+
+```powershell
+.\tool\update_item_base_names.ps1
+.\tool\update_item_base_names.ps1 -Check
+```
+
+名称更新脚本需要 PowerShell 7，并合并 RePoE、编年史简中词典、国服官方交易静态数据及本地人工修正；应用运行时不联网。
 
 ## 版本管理
 

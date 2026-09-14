@@ -4,6 +4,8 @@ POE2 LootTracker includes a source snapshot derived from GameHelper and GameOffs
 
 The Simplified Chinese item-name data shipped as `tracker_host/Assets/Localization/item-names.zh-CN.json` is derived from the [wanghan008/poe2](https://github.com/wanghan008/poe2) repository at commit `e099a3d07c37656c0b58b982d4e43fac0efe40dc`, licensed under the Apache License 2.0. The license text is included in `third_party/wanghan008-poe2/LICENSE` and is redistributed with every release bundle.
 
+Current item-name additions are generated from the [poe-ninja-translator](https://github.com/soifow/poe-ninja-translator) dictionary, whose translations are sourced from [PoE2DB](https://poe2db.tw/) and credited there to PoE2DB. PoE2DB marks its wiki content as CC BY-NC-SA 3.0 unless otherwise noted. Current economy-item translations are also aligned by stable IDs from the international and Tencent Path of Exile 2 trade static-data endpoints. Path of Exile and its game data are copyright Grinding Gear Games.
+
 The Inter and IBM Plex Sans font files are licensed under the SIL Open Font License 1.1. Their license texts ship in `assets/fonts/`.
 
 The Source Han Sans (思源黑体, the same typeface Google ships as Noto Sans CJK) files bundled in `assets/fonts/` are licensed under the SIL Open Font License 1.1, copyright 2014-2025 Adobe, with Reserved Font Name 'Source'. Its license text ships beside them.
